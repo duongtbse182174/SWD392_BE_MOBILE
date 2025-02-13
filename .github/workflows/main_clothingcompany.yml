@@ -13,48 +13,28 @@ jobs:
       contents: read
 
     steps:
-      # Bước checkout mã nguồn từ repo
       - uses: actions/checkout@v4
 
-      # Kiểm tra thư mục hiện tại và liệt kê file
-      - name: Check current directory
-        run: |
-          echo "Current directory: ${{ github.workspace }}"
-          ls "${{ github.workspace }}"
-
-
-      # Kiểm tra xem file pom.xml có tồn tại không
-      - name: Check if pom.xml exists
-        run: |
-          if (Test-Path "${{ github.workspace }} {
-            echo "pom.xml found"
-          } else {
-            echo "pom.xml NOT found"
-            exit 1
-          }
-
-      #Kiểm tra xem pom.xml có nằm trong app không
-      - name: Check if pom.xml exists in app directory
-        run: dir ${{ github.workspace }}/app
-
-      
-      # Cài đặt Java
       - name: Set up Java version
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'microsoft'
 
-      # Build project với Maven
-      - name: Build with Maven
-        run: mvn -f "${{ github.workspace }}/SWD392_Warehouse_management/BE_Mobile/app/pom.xml" clean install
+      - name: Check current directory and list files
+        run: |
+          echo "Current directory: ${{ github.workspace }}"
+          dir ${{ github.workspace }}
+          dir ${{ github.workspace }}/app
 
-      # Upload file JAR để deploy
+      - name: Build with Maven
+        run: mvn -f ${{ github.workspace }}/app/pom.xml clean install
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: "${{ github.workspace }}/SWD392_Warehouse_management/BE_Mobile/app/target/*.jar"
+          path: ${{ github.workspace }}/app/target/*.jar
 
   deploy:
     runs-on: windows-latest
@@ -67,13 +47,11 @@ jobs:
       contents: read
 
     steps:
-      # Tải file JAR từ bước build
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: java-app
 
-      # Đăng nhập Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -81,7 +59,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
-      # Deploy lên Azure Web App
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
