@@ -18,7 +18,10 @@ jobs:
 
       # Kiểm tra thư mục hiện tại và liệt kê file
       - name: Check current directory
-        run: echo "Current directory: ${{ github.workspace }}" && dir "${{ github.workspace }}"
+        run: |
+          echo "Current directory: ${{ github.workspace }}"
+          ls "${{ github.workspace }}"
+
 
       # Kiểm tra xem file pom.xml có tồn tại không
       - name: Check if pom.xml exists
