@@ -22,7 +22,8 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        run: mvn -f "D:/SEMESTER 7/SWD/SWD392_Warehouse_management/BE_Mobile/app/pom.xml" clean install
+        run: mvn -f "${{ github.workspace }}/SWD392_Warehouse_management/BE_Mobile/app/pom.xml" clean install
+
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
