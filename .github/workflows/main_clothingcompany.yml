@@ -25,8 +25,8 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        working-directory: ./SWD392_Warehouse_management/BE_Mobile/app
-        run: mvn clean install
+        run: mvn -f ./SWD392_Warehouse_management/BE_Mobile/app/pom.xml clean install
+
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
