@@ -25,7 +25,7 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        working-directory: ./SWD392_BE_MOBILE  
+        working-directory: ./SWD392_Warehouse_management/BE_Mobile/app
         run: mvn clean install
 
       - name: Upload artifact for deployment job
