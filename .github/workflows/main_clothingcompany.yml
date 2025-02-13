@@ -33,6 +33,11 @@ jobs:
             exit 1
           }
 
+      #Kiểm tra xem pom.xml có nằm trong app không
+      - name: Check if pom.xml exists in app directory
+        run: dir ${{ github.workspace }}/app
+
+      
       # Cài đặt Java
       - name: Set up Java version
         uses: actions/setup-java@v4
