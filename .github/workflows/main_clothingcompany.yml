@@ -27,8 +27,10 @@ jobs:
           dir ${{ github.workspace }}
           dir ${{ github.workspace }}/app
 
-      - name: Build with Maven
-        run: mvn -f ${{ github.workspace }}/app/pom.xml clean install
+      - name: Build Maven project
+        run: |
+          cd app
+          mvn clean install
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
