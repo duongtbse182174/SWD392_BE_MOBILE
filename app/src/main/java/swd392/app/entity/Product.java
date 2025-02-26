@@ -15,7 +15,7 @@ public class Product {
     @Id
     String productId;
 
-    @Column(nullable = false, unique = true, length = 6)
+    @Column(name = "product_code", nullable = false, unique = true, length = 6)
     String productCode;
 
     @Column(nullable = false)
@@ -31,7 +31,6 @@ public class Product {
     Integer quantity;
 
     @ManyToOne
-    @JoinColumn(name = "productType_code", referencedColumnName = "productType_code", nullable = false)
+    @JoinColumn(name = "productType_code", referencedColumnName = "productTypeCode", nullable = false)
     ProductType productType;
 }
-
