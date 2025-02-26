@@ -12,4 +12,9 @@ public class TestController {
     public String testApi() {
         return "Hello, đây là API test bằng Spring Boot và Swagger!";
     }
+
+    @GetMapping("/message")
+    public String message() {
+        return "Hello, you app deployed successfully in Azure!";
+    }
 }
