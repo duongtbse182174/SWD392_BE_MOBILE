@@ -15,7 +15,7 @@ public class ProductType {
     @Id
     String productTypeId;
 
-    @Column(nullable = false, unique = true, length = 6)
+    @Column(name = "productType_code", nullable = false, unique = true, length = 6)
     String productTypeCode;
 
     @Column(nullable = false)

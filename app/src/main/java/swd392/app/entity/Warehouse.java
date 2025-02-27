@@ -15,8 +15,8 @@ public class Warehouse {
     @Id
     String warehouseId;
 
-    @Column(nullable = false, unique = true, length = 6)
-    String warehouseCode;
+    @Column(name = "warehouse_code", nullable = false, unique = true)
+    private String warehouseCode;
 
     @Column(nullable = false)
     String warehouseName;
