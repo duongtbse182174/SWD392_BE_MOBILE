@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import swd392.app.enums.UserStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -62,4 +63,5 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

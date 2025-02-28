@@ -15,8 +15,8 @@ public class Category {
     @Id
     String categoryId;
 
-    @Column(name = "category_code", nullable = false, unique = true, length = 6)
-    String categoryCode;
+    @Column(name = "category_code", nullable = false, unique = true)
+    private String categoryCode;
 
     @Column(nullable = false)
     String categoryName;
