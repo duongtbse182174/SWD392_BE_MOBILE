@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import swd392.app.dto.request.UserCreationRequest;
@@ -30,6 +30,7 @@ public class UserService {
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
 
+//    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(UserCreationRequest request) {
 
         if (userRepository.existsByUserName(request.getUserName()))
@@ -41,7 +42,7 @@ public class UserService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        Role role = roleRepository.findByRoleName("STAFF")
+        Role role = roleRepository.findByRoleType("STAFF")
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
         user.setRole(role);
@@ -49,37 +50,36 @@ public class UserService {
         return userMapper.toUserResponse(userRepository.save(user));
     }
 
-    public UserResponse getMyInfo(){
-        var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
-
-        return userMapper.toUserResponse(user);
-    }
-
-    public UserResponse updateUser(String userId, UserUpdateRequest request){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        userMapper.updateUser(user, request);
-
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
-
-        return userMapper.toUserResponse(userRepository.save(user));
-    }
-
-    @PostAuthorize("returnObject.email == authentication.name")
-    public UserResponse getUser(String userId){
-        log.info("In method get user by Id");
-
-        return userMapper.toUserResponse(userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST)));
-    }
-
+//    public UserResponse getMyInfo(){
+//        var context = SecurityContextHolder.getContext();
+//        String email = context.getAuthentication().getName();
+//
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+//
+//        return userMapper.toUserResponse(user);
+//    }
+//
+//    public UserResponse updateUser(String userId, UserUpdateRequest request){
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//        userMapper.updateUser(user, request);
+//
+//        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+//            user.setPassword(passwordEncoder.encode(request.getPassword()));
+//        }
+//
+//        return userMapper.toUserResponse(userRepository.save(user));
+//    }
+//
+//    @PostAuthorize("returnObject.email == authentication.name")
+//    public UserResponse getUser(String userId){
+//        log.info("In method get user by Id");
+//
+//        return userMapper.toUserResponse(userRepository.findById(userId)
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST)));
+//    }
 
 }
 

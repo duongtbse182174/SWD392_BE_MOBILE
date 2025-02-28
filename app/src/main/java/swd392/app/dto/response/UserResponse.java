@@ -11,7 +11,9 @@ import swd392.app.entity.Role;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
     String id;
-    String name;
+    String userCode;
+    String userName;
+    String fullName;
     String email;
     Role role;
 }

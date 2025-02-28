@@ -60,8 +60,8 @@ public class UserCreationRequest {
     @Size(min = 6, max = 6, message = "USER_CODE_INVALID")
     String userCode;
 
-    @NotNull(message = "ROLE_REQUIRED")
-    Long roleId; // Vì role là @ManyToOne, ta chỉ cần truyền ID
+//    @NotNull(message = "ROLE_REQUIRED")
+    String roleId; // Vì role là @ManyToOne, ta chỉ cần truyền ID
 
 //    @NotBlank(message = "USERNAME_REQUIRED")
     @Size(min = 3, message = "USERNAME_INVALID")
@@ -78,7 +78,7 @@ public class UserCreationRequest {
     @Size(min = 8, message = "PASSWORD_INVALID")
     String password;
 
-    Long warehouseId; // ID của warehouse (nếu có)
+    String warehouseId; // ID của warehouse (nếu có)
 
 //    @NotNull(message = "STATUS_REQUIRED")
     UserStatus status;

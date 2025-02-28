@@ -16,7 +16,7 @@ public class Warehouse {
     String warehouseId;
 
     @Column(name = "warehouse_code", nullable = false, unique = true)
-    private String warehouseCode;
+    String warehouseCode;
 
     @Column(nullable = false)
     String warehouseName;

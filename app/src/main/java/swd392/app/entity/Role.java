@@ -11,21 +11,20 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "Role")
-
 public class Role {
     @Id
     String roleId;
 
-    @Enumerated(EnumType.STRING)
+//    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
-    private RoleType roleType;
+    String roleType;
 
     @Column(nullable = false)
     String roleName;
 
-    public enum RoleType {
-        ADMIN,
-        MANAGER,
-        STAFF
-    }
+//    public enum RoleType {
+//        ADMIN,
+//        MANAGER,
+//        STAFF
+//    }
 }

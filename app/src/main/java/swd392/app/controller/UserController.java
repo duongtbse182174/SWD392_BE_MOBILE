@@ -24,29 +24,30 @@ public class UserController {
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         return ApiResponse.<UserResponse>builder()
+                .code(1000)
                 .result(userService.createUser(request))
                 .build();
     }
 
-    @GetMapping("/myInfo")
-    ApiResponse<UserResponse> getMyInfo() {
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.getMyInfo())
-                .build();
-    }
-
-    @GetMapping("/{userId}")
-    ApiResponse<UserResponse> getUser(@PathVariable("userId") String userId) {
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.getUser(userId))
-                .build();
-    }
-
-    @PutMapping("/{userId}")
-    ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.updateUser(userId, request))
-                .build();
-    }
+//    @GetMapping("/myInfo")
+//    ApiResponse<UserResponse> getMyInfo() {
+//        return ApiResponse.<UserResponse>builder()
+//                .result(userService.getMyInfo())
+//                .build();
+//    }
+//
+//    @GetMapping("/{userId}")
+//    ApiResponse<UserResponse> getUser(@PathVariable("userId") String userId) {
+//        return ApiResponse.<UserResponse>builder()
+//                .result(userService.getUser(userId))
+//                .build();
+//    }
+//
+//    @PutMapping("/{userId}")
+//    ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
+//        return ApiResponse.<UserResponse>builder()
+//                .result(userService.updateUser(userId, request))
+//                .build();
+//    }
 }
 
