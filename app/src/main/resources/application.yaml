@@ -1,7 +1,7 @@
 server:
   port: 8080
-  servlet:
-    context-path: /api
+#  servlet:
+#    context-path: /api
 
 spring:
   datasource:
@@ -18,4 +18,10 @@ openapi:
     api-docs: api-service
     server: http://localhost:8080
     title: API Service
+<<<<<<< HEAD
     version: 1.0.0
+=======
+    version: 1.0.0
+jwt:
+  signerKey: "eaRge+NAiFb7HQITA/QcCaDmS7QXJlwy7UpOAJj5/ddqoWCYQquoPXkget8OK+zA"
+>>>>>>> Duong
