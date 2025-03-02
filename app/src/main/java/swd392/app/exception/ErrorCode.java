@@ -13,7 +13,11 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(1009, "Role not found"),
     PROGRAM_NOT_EXIST(1010, "Program is not exist"),
     PERMISSION_ERROR(1011, "You don't have permission to do this"),
-    FULLNAME_REQUIRED(1012, "Fullname must not blank")
+    FULLNAME_REQUIRED(1012, "Fullname must not blank"),
+    // Thêm mã lỗi mới cho chức năng kiểm kho
+    WAREHOUSE_NOT_FOUND(1013, "Warehouse not found"),
+    PRODUCT_NOT_FOUND(1014, "Product not found"),
+    STOCK_NOT_FOUND(1015, "Stock record not found for this product");
     ;
 
     ErrorCode(int code, String message) {
