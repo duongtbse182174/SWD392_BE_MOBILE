@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import swd392.app.dto.request.StockCheckApprovalRequest;
 import swd392.app.dto.request.StockCheckNoteRequest;
 import swd392.app.dto.response.ApiResponse;
 import swd392.app.dto.response.StockCheckNoteResponse;
@@ -22,7 +23,7 @@ public class StockCheckController {
     StockCheckService stockCheckService;
 
     // Tạo mới phiếu kiểm kho
-    @PostMapping
+    @PostMapping("/create")
     public ApiResponse<StockCheckNoteResponse> createStockCheckNote(
             @Valid @RequestBody StockCheckNoteRequest request) {
         return ApiResponse.<StockCheckNoteResponse>builder()
@@ -30,7 +31,7 @@ public class StockCheckController {
                 .build();
     }
 
-    @GetMapping
+    @GetMapping()
     public ApiResponse<List<StockCheckNoteResponse>> getAllStockCheckNotes() {
         return ApiResponse.<List<StockCheckNoteResponse>>builder()
                 .result(stockCheckService.getAllStockCheckNotes())
@@ -42,6 +43,15 @@ public class StockCheckController {
             @PathVariable String warehouseCode) {
         return ApiResponse.<List<StockCheckNoteResponse>>builder()
                 .result(stockCheckService.getStockCheckNotesByWarehouse(warehouseCode))
+                .build();
+    }
+
+    @PutMapping("/approve")
+    public ApiResponse<StockCheckNoteResponse> approveStockCheck(
+            @Valid @RequestBody StockCheckApprovalRequest request) {
+        log.info("Approving stock check with ID: {}", request.getStockCheckNoteId());
+        return ApiResponse.<StockCheckNoteResponse>builder()
+                .result(stockCheckService.approveStockCheck(request))
                 .build();
     }
 }

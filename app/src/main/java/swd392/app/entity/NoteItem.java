@@ -13,9 +13,10 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "NoteItem")
 public class NoteItem {
     @Id
+    @Column(name = "noteItem_id")
     String noteItemId;
 
-    @Column(nullable = false, unique = true, length = 6)
+    @Column(name = "noteItem_code",nullable = false, unique = true, length = 6)
     String noteItemCode;
 
     @ManyToOne

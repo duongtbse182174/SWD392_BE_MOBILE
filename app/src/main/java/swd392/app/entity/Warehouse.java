@@ -13,12 +13,13 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "Warehouse")
 public class Warehouse {
     @Id
+    @Column(name = "warehouse_id")
     String warehouseId;
 
-    @Column(name = "warehouse_code", nullable = false, unique = true)
+    @Column(name = "warehouse_code", nullable = false, unique = true, length = 6)
     String warehouseCode;
 
-    @Column(nullable = false)
+    @Column(name = "warehouse_name",nullable = false)
     String warehouseName;
 
     @Column(nullable = false)

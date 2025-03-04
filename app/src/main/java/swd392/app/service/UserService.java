@@ -33,6 +33,9 @@ public class UserService {
 //    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(UserCreationRequest request) {
 
+        if (userRepository.existsByUserCode(request.getUserCode()))
+            throw new AppException(ErrorCode.USER_CODE_EXIST);
+
         if (userRepository.existsByUserName(request.getUserName()))
             throw new AppException(ErrorCode.USER_EXIST);
 

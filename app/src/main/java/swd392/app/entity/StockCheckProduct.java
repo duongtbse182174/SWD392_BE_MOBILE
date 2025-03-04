@@ -13,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "StockCheckProduct")
 public class StockCheckProduct {
     @Id
+    @Column(name = "stockCheckProduct_id")
     String stockCheckProductId;
 
     @ManyToOne
@@ -23,10 +24,10 @@ public class StockCheckProduct {
     @JoinColumn(name = "product_code", referencedColumnName = "product_code", nullable = false)
     Product product;
 
-    @Column(nullable = false)
+    @Column(name = "last_quantity", nullable = false)
     Integer expectedQuantity;
 
-    @Column(nullable = false)
+    @Column(name = "actual_quantity", nullable = false)
     Integer actualQuantity;
 
     @Column(insertable = false, updatable = false)

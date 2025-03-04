@@ -3,6 +3,8 @@ package swd392.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import swd392.app.enums.ProductStatus;
+import swd392.app.enums.UserStatus;
 
 @Getter
 @Setter
@@ -13,15 +15,16 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "Product")
 public class Product {
     @Id
+    @Column(name = "product_id")
     String productId;
 
     @Column(name = "product_code", nullable = false, unique = true, length = 6)
     String productCode;
 
-    @Column(nullable = false)
+    @Column(name = "product_name",nullable = false)
     String productName;
 
-    @Column(nullable = false)
+    @Column(name = "size",nullable = false)
     String size;
 
     @Column(nullable = false)
@@ -29,6 +32,10 @@ public class Product {
 
     @Column(nullable = false)
     Integer quantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('instock', 'outofstock') DEFAULT 'instock'")
+    ProductStatus status;
 
     @ManyToOne
     @JoinColumn(name = "productType_code", referencedColumnName = "productType_code", nullable = false)
