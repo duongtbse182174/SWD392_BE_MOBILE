@@ -36,7 +36,6 @@ public class StockCheckService {
     WarehouseRepository warehouseRepository;
     StockCheckMapper stockCheckMapper;
 
-    @Transactional
     public StockCheckNoteResponse createStockCheckNote(StockCheckNoteRequest request) {
         log.info("Creating stock check note for warehouse: {}", request.getWarehouseCode());
 
