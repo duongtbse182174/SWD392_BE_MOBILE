@@ -17,7 +17,12 @@ public enum ErrorCode {
     // Thêm mã lỗi mới cho chức năng kiểm kho
     WAREHOUSE_NOT_FOUND(1013, "Warehouse not found"),
     PRODUCT_NOT_FOUND(1014, "Product not found"),
-    STOCK_NOT_FOUND(1015, "Stock record not found for this product");
+    STOCK_NOT_FOUND(1015, "Stock record not found for this product"),
+    UNKNOWN_ERROR(1016, "Unknown error"),
+    STOCK_CHECK_NOTE_NOT_FOUND(1017, "Stock check note not found"),
+    USER_CODE_EXIST(1018, "User code is exist"),
+    STOCK_CHECK_NOTE_CANNOT_BE_MODIFIED(1019, "Stock check note can not be modified"),
+    STOCK_CHECK_NOTE_CANNOT_BE_FINALIZED(1020,"Stock check note can not be finalized")
     ;
 
     ErrorCode(int code, String message) {

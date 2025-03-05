@@ -17,5 +17,6 @@ public class StockCheckNoteResponse { //DTO cho phản hồi phiếu kiểm kho
     String warehouseCode;
     String warehouseName;
     String checkerName;
+    String stockCheckStatus;
     List<StockCheckProductResponse> stockCheckProducts;
 }

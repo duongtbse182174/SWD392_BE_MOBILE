@@ -58,6 +58,11 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(token)
                 .authenticated(true)
+                .userCode(user.getUserCode())
+                .userName(user.getUserName())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole())
                 .build();
     }
 
@@ -97,7 +102,7 @@ public class AuthenticationService {
         StringJoiner stringJoiner = new StringJoiner(" ");
 
         if (user.getRole() != null) {
-            stringJoiner.add(user.getRole().getRoleName());
+            stringJoiner.add(user.getRole().getRoleType());
         }
 
         return stringJoiner.toString();
