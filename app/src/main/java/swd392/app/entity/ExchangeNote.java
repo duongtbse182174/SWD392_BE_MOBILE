@@ -3,6 +3,7 @@ package swd392.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import swd392.app.enums.SourceType;
 import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.StockTransactionType;
 
@@ -33,15 +34,16 @@ public class ExchangeNote {
     @Column(nullable = false, columnDefinition = "ENUM('IMPORT', 'EXPORT', 'TRANSFER')")
     StockTransactionType transactionType;
 
-    @Column(name = "source_type", nullable = false, columnDefinition = "ENUM('EXTERNAL', 'INTERNAL', 'SYSTEM') DEFAULT 'EXTERNAL'")
-    String sourceType;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "ENUM('EXTERNAL', 'INTERNAL', 'SYSTEM') DEFAULT 'EXTERNAL'")
+    SourceType sourceType;
 
     @ManyToOne
-    @JoinColumn(name = "source_warehouse_id", referencedColumnName = "warehouse_code", nullable = false)
+    @JoinColumn(name = "source_warehouse_id", referencedColumnName = "warehouse_code", nullable = true)
     Warehouse sourceWarehouse;
 
     @ManyToOne
-    @JoinColumn(name = "destination_warehouse_id", referencedColumnName = "warehouse_code")
+    @JoinColumn(name = "destination_warehouse_id", referencedColumnName = "warehouse_code", nullable = true)
     Warehouse destinationWarehouse;
 
     @ManyToOne
