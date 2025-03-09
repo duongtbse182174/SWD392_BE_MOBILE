@@ -11,6 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -18,7 +19,6 @@ import java.util.List;
 @Table(name = "ExchangeNote")
 public class ExchangeNote {
     @Id
-
     @Column(name = "exchangeNote_id")
     String exchangeNoteId;
 
@@ -33,12 +33,15 @@ public class ExchangeNote {
     @Column(nullable = false, columnDefinition = "ENUM('IMPORT', 'EXPORT', 'TRANSFER')")
     StockTransactionType transactionType;
 
+    @Column(name = "source_type", nullable = false, columnDefinition = "ENUM('EXTERNAL', 'INTERNAL', 'SYSTEM') DEFAULT 'EXTERNAL'")
+    String sourceType;
+
     @ManyToOne
-    @JoinColumn(name = "source_warehouse_id") // Kho xuất (có thể null nếu nhập từ ngoài)
+    @JoinColumn(name = "source_warehouse_id", referencedColumnName = "warehouse_code", nullable = false)
     Warehouse sourceWarehouse;
 
     @ManyToOne
-    @JoinColumn(name = "destination_warehouse_id") // Kho nhận (có thể null nếu là xuất ra ngoài)
+    @JoinColumn(name = "destination_warehouse_id", referencedColumnName = "warehouse_code")
     Warehouse destinationWarehouse;
 
     @ManyToOne
@@ -46,10 +49,9 @@ public class ExchangeNote {
     User createdBy;
 
     @ManyToOne
-    @JoinColumn(name = "approved_by", referencedColumnName = "user_code", nullable = true)
+    @JoinColumn(name = "approved_by", referencedColumnName = "user_code", insertable = false, updatable = false)
     User approvedBy;
 
-    @OneToMany(mappedBy = "exchangeNote", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "exchangeNote", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     List<NoteItem> noteItems;
-
 }

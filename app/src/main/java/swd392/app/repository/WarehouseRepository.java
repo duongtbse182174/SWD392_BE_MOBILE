@@ -6,6 +6,7 @@ import swd392.app.entity.Warehouse;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
     Optional<Warehouse> findByWarehouseCode(String warehouseCode);

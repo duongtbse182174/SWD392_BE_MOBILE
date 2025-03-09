@@ -12,7 +12,9 @@ import swd392.app.dto.response.NoteItemResponse;
 import swd392.app.entity.ExchangeNote;
 import swd392.app.entity.NoteItem;
 import swd392.app.entity.User;
+import swd392.app.entity.Warehouse;
 import swd392.app.enums.StockExchangeStatus;
+import swd392.app.enums.StockTransactionType;
 import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;
 import swd392.app.mapper.StockTransactionMapper;
@@ -41,24 +43,32 @@ public class StockTransactionService {
     public StockExchangeResponse createTransaction(StockExchangeRequest request) {
         log.info("Bắt đầu tạo giao dịch: {}", request);
 
-        // Kiểm tra kho nguồn
-        var sourceWarehouse = warehouseRepository.findById(request.getSourceWarehouseId())
-                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
-        log.info("Kho nguồn: {}", sourceWarehouse.getWarehouseName());
+        Warehouse sourceWarehouse = null;
+        Warehouse destinationWarehouse = null;
 
-        // Kiểm tra kho đích
-        var destinationWarehouse = warehouseRepository.findById(request.getDestinationWarehouseId())
-                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
-        log.info("Kho đích: {}", destinationWarehouse.getWarehouseName());
+        // Kiểm tra kho nguồn (chỉ cần nếu không phải nhập từ ngoài)
+        if (request.getTransactionType() != StockTransactionType.IMPORT) {
+            sourceWarehouse = warehouseRepository.findById(request.getSourceWarehouseId())
+                    .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
+            log.info("Kho nguồn: {}", sourceWarehouse.getWarehouseName());
+        }
+
+        // Kiểm tra kho đích (chỉ cần nếu không phải xuất ra ngoài)
+        if (request.getTransactionType() != StockTransactionType.EXPORT) {
+            destinationWarehouse = warehouseRepository.findById(request.getDestinationWarehouseId())
+                    .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
+            log.info("Kho đích: {}", destinationWarehouse.getWarehouseName());
+        }
 
         // Kiểm tra người tạo giao dịch
         var createdByUser = userRepository.findByUserCode(request.getCreatedBy())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
         log.info("Người tạo giao dịch: {}", createdByUser.getFullName());
 
         // Tạo giao dịch mới
         ExchangeNote transaction = new ExchangeNote();
-        transaction.setExchangeNoteId(UUID.randomUUID().toString()); // Hoặc logic sinh ID của bạn
+        transaction.setExchangeNoteId(UUID.randomUUID().toString());
         transaction.setDate(LocalDate.now());
         transaction.setTransactionType(request.getTransactionType());
         transaction.setSourceWarehouse(sourceWarehouse);
@@ -66,20 +76,8 @@ public class StockTransactionService {
         transaction.setCreatedBy(createdByUser);
         transaction.setStatus(StockExchangeStatus.pending);
 
-        log.info("Đang tạo giao dịch: type={}, sourceWarehouse={}, destinationWarehouse={}, createdBy={}, status={}",
-                request.getTransactionType(), sourceWarehouse.getWarehouseName(),
-                destinationWarehouse.getWarehouseName(), createdByUser.getFullName(), StockExchangeStatus.pending);
-        log.info("Transaction trước khi lưu: type={}, sourceWarehouse={}, destinationWarehouse={}, createdBy={}, status={}",
-                transaction.getTransactionType(),
-                transaction.getSourceWarehouse() != null ? transaction.getSourceWarehouse().getWarehouseName() : "null",
-                transaction.getDestinationWarehouse() != null ? transaction.getDestinationWarehouse().getWarehouseName() : "null",
-                transaction.getCreatedBy() != null ? transaction.getCreatedBy().getFullName() : "null",
-                transaction.getStatus()
-        );
-        log.info("Transaction hashCode trước khi lưu: {}", transaction.hashCode());
         // Lưu giao dịch trước khi xử lý sản phẩm
         ExchangeNote savedTransaction = stockTransactionRepository.save(transaction);
-        log.info("Giao dịch đã được lưu với ID: {}", savedTransaction.getExchangeNoteId());
 
         // Xử lý danh sách sản phẩm
         List<NoteItem> noteItems = request.getItems().stream().map(item -> {
@@ -88,25 +86,21 @@ public class StockTransactionService {
 
             NoteItem noteItem = new NoteItem();
             noteItem.setNoteItemId(UUID.randomUUID().toString());
-            noteItem.setNoteItemCode(UUID.randomUUID().toString().substring(0, 5));
-            noteItem.setExchangeNote(savedTransaction); // Gán ExchangeNote đã lưu
+            noteItem.setNoteItemCode(UUID.randomUUID().toString().substring(0, 6));
+            noteItem.setExchangeNote(savedTransaction);
             noteItem.setProduct(product);
             noteItem.setQuantity(item.getQuantity());
 
             return noteItem;
         }).collect(Collectors.toList());
 
-        // Lưu danh sách sản phẩm trước khi gán vào transaction
         noteItems = noteItemRepository.saveAll(noteItems);
-        log.info("Đã thêm {} sản phẩm vào giao dịch.", noteItems.size());
         savedTransaction.setNoteItems(noteItems);
 
-        // Chuyển đổi danh sách NoteItem thành NoteItemResponse
         List<NoteItemResponse> noteItemResponses = noteItems.stream()
                 .map(noteItemMapper::toResponse)
                 .collect(Collectors.toList());
 
-        // Chuyển đổi ExchangeNote thành response
         StockExchangeResponse response = stockTransactionMapper.toResponse(savedTransaction);
         response.setItems(noteItemResponses);
 
