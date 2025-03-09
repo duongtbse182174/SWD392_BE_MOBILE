@@ -15,6 +15,7 @@ public class UserResponse {
     String userName;
     String fullName;
     String email;
+    String warehouseCode;
     Role role;
 }
 

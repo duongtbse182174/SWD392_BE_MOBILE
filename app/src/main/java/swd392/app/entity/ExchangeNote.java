@@ -35,7 +35,7 @@ public class ExchangeNote {
     StockTransactionType transactionType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "ENUM('EXTERNAL', 'INTERNAL', 'SYSTEM') DEFAULT 'EXTERNAL'")
+    @Column(name = "source_type", nullable = true, columnDefinition = "ENUM('EXTERNAL', 'INTERNAL', 'SYSTEM')")
     SourceType sourceType;
 
     @ManyToOne
@@ -56,4 +56,7 @@ public class ExchangeNote {
 
     @OneToMany(mappedBy = "exchangeNote", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     List<NoteItem> noteItems;
+
+    @Transient // Trường tạm thời không lưu vào database
+    private List<NoteItem> transientNoteItems;
 }
