@@ -28,7 +28,12 @@ public enum ErrorCode {
     TRANSACTION_CANNOT_BE_MODIFIED(1023, "Stock exchange note can not be modified"),
     TRANSACTION_CANNOT_BE_FINALIZED(1024, "Stock exchange note can not be finalized"),
     INSUFFICIENT_STOCK(1025, "Not enough stock"),
-    WAREHOUSE_REQUIRED(1026, "Warehouse is required")
+    WAREHOUSE_REQUIRED(1026, "Warehouse is required"),
+    NOTE_ITEMS_NOT_FOUND(1027, "Note item not found"),
+    CAN_NOT_SYSTEM(1028, "SYSTEM only used for TRANSFER"),
+    NOT_ENOUGH_QUANTITY(1029, "Not enough quantity"),
+    INVALID_SOURCE_TYPE(1030,"Source type is incorrect"),
+    INVALID_TRANSACTION_TYPE(1031, "Transaction type are: IMPORT, EXPORT, TRANSFER")
     ;
 
     ErrorCode(int code, String message) {

@@ -13,12 +13,14 @@ import swd392.app.dto.request.UserCreationRequest;
 import swd392.app.dto.request.UserUpdateRequest;
 import swd392.app.dto.response.UserResponse;
 import swd392.app.entity.Role;
+import swd392.app.entity.Warehouse;
 import swd392.app.entity.User;
 import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;
 import swd392.app.mapper.UserMapper;
 import swd392.app.repository.RoleRepository;
 import swd392.app.repository.UserRepository;
+import swd392.app.repository.WarehouseRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ public class UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
+    WarehouseRepository warehouseRepository;
 
 //    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(UserCreationRequest request) {
@@ -49,6 +52,10 @@ public class UserService {
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
         user.setRole(role);
+
+        Warehouse warehouse = warehouseRepository.findByWarehouseCode(request.getWarehouseCode())
+                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
+        user.setWarehouse(warehouse);
 
         return userMapper.toUserResponse(userRepository.save(user));
     }

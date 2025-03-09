@@ -16,5 +16,8 @@ public interface NoteItemRepository extends JpaRepository<NoteItem, String> {
 
     @Query("SELECT ni FROM NoteItem ni WHERE ni.exchangeNote.exchangeNoteId = :exchangeNoteId")
     List<NoteItem> findByExchangeNote_ExchangeNoteId(@Param("exchangeNoteId") String exchangeNoteId);
+    Optional<NoteItem> findByProduct_ProductCode(String productCode);
+    Optional<NoteItem> findByProduct_ProductCodeAndExchangeNote_ExchangeNoteId(String productCode, String exchangeNoteId);
+    Optional<NoteItem> findByProduct_ProductCodeAndWarehouse_WarehouseCode(String productCode, String warehouseCode);
 
 }

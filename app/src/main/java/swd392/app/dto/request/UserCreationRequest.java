@@ -78,7 +78,7 @@ public class UserCreationRequest {
     @Size(min = 8, message = "PASSWORD_INVALID")
     String password;
 
-    String warehouseId; // ID của warehouse (nếu có)
+    String warehouseCode; // ID của warehouse (nếu có)
 
 //    @NotNull(message = "STATUS_REQUIRED")
     UserStatus status;

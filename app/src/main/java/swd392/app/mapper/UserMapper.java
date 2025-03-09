@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(source = "userCode", target = "userCode")
     @Mapping(source = "userName", target = "userName")
     @Mapping(source = "fullName", target = "fullName")
+    @Mapping(source = "warehouse.warehouseCode", target = "warehouseCode")
     UserResponse toUserResponse(User user);
 
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
