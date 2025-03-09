@@ -28,12 +28,12 @@ public class UserController {
                 .build();
     }
 
-//    @GetMapping("/myInfo")
-//    ApiResponse<UserResponse> getMyInfo() {
-//        return ApiResponse.<UserResponse>builder()
-//                .result(userService.getMyInfo())
-//                .build();
-//    }
+    @GetMapping("/myInfo")
+    ApiResponse<UserResponse> getMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
+                .build();
+    }
 //
 //    @GetMapping("/{userId}")
 //    ApiResponse<UserResponse> getUser(@PathVariable("userId") String userId) {

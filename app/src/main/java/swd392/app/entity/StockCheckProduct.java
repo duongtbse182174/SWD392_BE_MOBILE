@@ -26,7 +26,7 @@ public class StockCheckProduct {
     Product product;
 
     @Column(name = "last_quantity", nullable = false)
-    int lastQuantity;
+    int expectedQuantity;
 
     @Column(name = "actual_quantity", nullable = false)
     int actualQuantity;

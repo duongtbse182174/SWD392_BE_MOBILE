@@ -3,11 +3,12 @@ package swd392.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.SourceType;
+import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.StockTransactionType;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -22,27 +23,27 @@ public class ExchangeNote {
     @Column(name = "exchangeNote_id")
     String exchangeNoteId;
 
-    @Column(name = "warehouse_code", nullable = false, length = 6)
-    String warehouseCode;
+    @Column(nullable = false)
+    LocalDate date;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transactionType", nullable = false)
+    @Column(nullable = false, columnDefinition = "ENUM('pending', 'accepted', 'finished', 'rejected') DEFAULT 'pending'")
+    StockExchangeStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "ENUM('IMPORT', 'EXPORT', 'TRANSFER')")
     StockTransactionType transactionType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "source_type", nullable = false)
+    @Column(nullable = false, columnDefinition = "ENUM('EXTERNAL', 'INTERNAL', 'SYSTEM') DEFAULT 'EXTERNAL'")
     SourceType sourceType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('pending', 'accepted', 'finished', 'rejected') DEFAULT 'pending'")
-    StockExchangeStatus status;
-
     @ManyToOne
-    @JoinColumn(name = "source_warehouse_id", referencedColumnName = "warehouse_code", nullable = false)
+    @JoinColumn(name = "source_warehouse_id", referencedColumnName = "warehouse_code", nullable = true)
     Warehouse sourceWarehouse;
 
     @ManyToOne
-    @JoinColumn(name = "destination_warehouse_id", referencedColumnName = "warehouse_code")
+    @JoinColumn(name = "destination_warehouse_id", referencedColumnName = "warehouse_code", nullable = true)
     Warehouse destinationWarehouse;
 
     @ManyToOne
@@ -50,9 +51,9 @@ public class ExchangeNote {
     User createdBy;
 
     @ManyToOne
-    @JoinColumn(name = "approved_by", referencedColumnName = "user_code")
+    @JoinColumn(name = "approved_by", referencedColumnName = "user_code", insertable = false, updatable = false)
     User approvedBy;
 
-    @Column(name = "date")
-    LocalDateTime date;
+    @OneToMany(mappedBy = "exchangeNote", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    List<NoteItem> noteItems;
 }

@@ -34,10 +34,11 @@ public class StockCheckService {
     StockCheckNoteRepository stockCheckNoteRepository;
     StockCheckProductRepository stockCheckProductRepository;
     UserRepository userRepository;
-    StockRepository stockRepository;
     ProductRepository productRepository;
     WarehouseRepository warehouseRepository;
     StockCheckMapper stockCheckMapper;
+    UserService userService;
+    UserMapper userMapper;
 
     public StockCheckNoteResponse createStockCheckNote(StockCheckNoteRequest request) {
         log.info("Creating stock check note for warehouse: {}", request.getWarehouseCode());
@@ -79,10 +80,14 @@ public class StockCheckService {
 
                 log.info("Processing product: {}", productRequest.getProductCode());
 
-                // Lấy số lượng hiện tại trực tiếp từ Product
-                int lastQuantity = product.getQuantity();
-                int actualQuantity = productRequest.getActualQuantity();
+//                // Tìm thông tin tồn kho hiện tại
+//                Product product = stockRepository.findByProduct_ProductCode(productRequest.getProductCode());
+//                if (stock == null) {
+//                    throw new AppException(ErrorCode.STOCK_NOT_FOUND);
+//                }
 
+                Integer expectedQuantity = product.getQuantity();
+                Integer actualQuantity = productRequest.getActualQuantity();
 
                 // Tạo chi tiết kiểm kho
                 StockCheckProduct stockCheckProduct = new StockCheckProduct();
@@ -94,9 +99,9 @@ public class StockCheckService {
 
                 stockCheckProducts.add(stockCheckProduct);
 
-                // Cập nhật số lượng tồn kho
-                stock.setQuantity(actualQuantity);
-                stockRepository.save(stock);
+//                // Cập nhật số lượng tồn kho
+//                product.setQuantity(actualQuantity);
+//                productRepository.save(product);
 
                 // Cập nhật số lượng trong bảng Product
                 product.setQuantity(actualQuantity);

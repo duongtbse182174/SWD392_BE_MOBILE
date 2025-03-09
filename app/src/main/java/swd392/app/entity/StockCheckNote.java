@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import swd392.app.enums.StockCheckStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -37,4 +38,7 @@ public class StockCheckNote {
     @Enumerated(EnumType.STRING)
     @Column(name = "stockCheck_status", columnDefinition = "ENUM('pending','approved', 'finished', 'rejected') DEFAULT 'pending'")
     StockCheckStatus stockCheckStatus;
+
+    @OneToMany(mappedBy = "stockCheckNote", cascade = CascadeType.ALL)
+    List<StockCheckProduct> stockCheckProducts;
 }

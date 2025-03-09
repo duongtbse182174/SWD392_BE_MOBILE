@@ -22,7 +22,13 @@ public enum ErrorCode {
     STOCK_CHECK_NOTE_NOT_FOUND(1017, "Stock check note not found"),
     USER_CODE_EXIST(1018, "User code is exist"),
     STOCK_CHECK_NOTE_CANNOT_BE_MODIFIED(1019, "Stock check note can not be modified"),
-    STOCK_CHECK_NOTE_CANNOT_BE_FINALIZED(1020,"Stock check note can not be finalized")
+    STOCK_CHECK_NOTE_CANNOT_BE_FINALIZED(1020,"Stock check note can not be finalized"),
+    PRODUCT_NOT_ENOUGH(1021, "Product is not enough to stock"),
+    TRANSACTION_NOT_FOUND(1022, "Stock exchange note not found"),
+    TRANSACTION_CANNOT_BE_MODIFIED(1023, "Stock exchange note can not be modified"),
+    TRANSACTION_CANNOT_BE_FINALIZED(1024, "Stock exchange note can not be finalized"),
+    INSUFFICIENT_STOCK(1025, "Not enough stock"),
+    WAREHOUSE_REQUIRED(1026, "Warehouse is required")
     ;
 
     ErrorCode(int code, String message) {
