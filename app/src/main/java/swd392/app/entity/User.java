@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import swd392.app.enums.UserStatus;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -18,27 +17,26 @@ import java.util.List;
 @Table(name = "User")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
     String userId;
 
-    @Column(name = "user_code",nullable = false, unique = true, length = 6)
+    @Column(name = "user_code", nullable = false, unique = true, length = 6)
     String userCode;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     Role role;
 
-    @Column(name = "user_name",nullable = false)
+    @Column(name = "user_name", nullable = false)
     String userName;
 
-    @Column(name = "full_name",nullable = false)
+    @Column(name = "full_name", nullable = false)
     String fullName;
 
-    @Column(name = "email",nullable = false)
+    @Column(name = "email", nullable = false)
     String email;
 
-    @Column(name = "password",nullable = false)
+    @Column(name = "password", nullable = false)
     String password;
 
     @ManyToOne
@@ -49,9 +47,10 @@ public class User {
     @Column(columnDefinition = "ENUM('active', 'inactive') DEFAULT 'inactive'")
     UserStatus status;
 
-    @Column(name = "created_at",updatable = false)
+    @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
-    @Column(name = "updated_at",updatable = false)
+
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
     @PrePersist
@@ -64,5 +63,4 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
 }

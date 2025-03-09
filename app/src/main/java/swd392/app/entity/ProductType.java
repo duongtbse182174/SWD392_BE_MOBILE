@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -19,10 +20,10 @@ public class ProductType {
     @Column(name = "productType_code", nullable = false, unique = true, length = 50)
     String productTypeCode;
 
-    @Column(name = "productType_name",nullable = false)
+    @Column(name = "productType_name", nullable = false)
     String productTypeName;
 
-    @Column(nullable = true)
+    @Column(name = "price")
     Double price;
 
     @ManyToOne

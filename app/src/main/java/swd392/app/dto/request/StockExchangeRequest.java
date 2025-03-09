@@ -2,8 +2,6 @@ package swd392.app.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import swd392.app.entity.NoteItem;
-import swd392.app.entity.User;
 import swd392.app.enums.StockTransactionType;
 
 import java.util.List;

@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -17,8 +18,8 @@ public class Category {
     String categoryId;
 
     @Column(name = "category_code", nullable = false, unique = true, length = 50)
-    private String categoryCode;
+    String categoryCode;
 
-    @Column(name = "category_name",nullable = false)
+    @Column(name = "category_name", nullable = false)
     String categoryName;
 }

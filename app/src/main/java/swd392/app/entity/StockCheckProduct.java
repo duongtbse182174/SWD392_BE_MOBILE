@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -25,11 +26,11 @@ public class StockCheckProduct {
     Product product;
 
     @Column(name = "last_quantity", nullable = false)
-    Integer expectedQuantity;
+    int lastQuantity;
 
     @Column(name = "actual_quantity", nullable = false)
-    Integer actualQuantity;
+    int actualQuantity;
 
-    @Column(insertable = false, updatable = false)
-    Integer difference;
+    @Column(name = "difference", insertable = false, updatable = false)
+    int difference;
 }

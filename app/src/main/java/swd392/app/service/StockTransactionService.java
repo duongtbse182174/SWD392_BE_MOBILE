@@ -11,7 +11,6 @@ import swd392.app.dto.response.StockExchangeResponse;
 import swd392.app.dto.response.NoteItemResponse;
 import swd392.app.entity.ExchangeNote;
 import swd392.app.entity.NoteItem;
-import swd392.app.entity.User;
 import swd392.app.enums.StockExchangeStatus;
 import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;

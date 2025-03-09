@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import swd392.app.enums.ProductStatus;
-import swd392.app.enums.UserStatus;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -21,17 +23,17 @@ public class Product {
     @Column(name = "product_code", nullable = false, unique = true, length = 6)
     String productCode;
 
-    @Column(name = "product_name",nullable = false)
+    @Column(name = "product_name", nullable = false)
     String productName;
 
-    @Column(name = "size",nullable = false)
+    @Column(name = "size", nullable = false)
     String size;
 
-    @Column(nullable = false)
+    @Column(name = "color", nullable = false)
     String color;
 
-    @Column(nullable = false)
-    Integer quantity;
+    @Column(name = "quantity", nullable = false)
+    int quantity;
 
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "ENUM('instock', 'outofstock') DEFAULT 'instock'")
@@ -40,4 +42,12 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "productType_code", referencedColumnName = "productType_code", nullable = false)
     ProductType productType;
+
+    @Column(name = "updated_at")
+    LocalDateTime updatedAt;
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

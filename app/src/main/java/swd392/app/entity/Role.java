@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -14,12 +15,11 @@ import lombok.experimental.FieldDefaults;
 public class Role {
     @Id
     @Column(name = "role_id")
-    String role_id;
+    String roleId;
 
-    @Column(name = "role_type", nullable = false, unique = true)
+    @Column(name = "role_type")
     String roleType;
 
-    @Column(name = "role_name",nullable = false)
+    @Column(name = "role_name", nullable = false)
     String roleName;
-
 }

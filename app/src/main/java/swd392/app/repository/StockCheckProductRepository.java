@@ -1,3 +1,4 @@
+
 package swd392.app.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;

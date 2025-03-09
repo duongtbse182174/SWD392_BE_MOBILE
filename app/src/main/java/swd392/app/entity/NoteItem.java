@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -16,7 +17,7 @@ public class NoteItem {
     @Column(name = "noteItem_id")
     String noteItemId;
 
-    @Column(name = "noteItem_code",nullable = false, unique = true, length = 6)
+    @Column(name = "noteItem_code", nullable = false, unique = true, length = 6)
     String noteItemCode;
 
     @ManyToOne
@@ -24,9 +25,13 @@ public class NoteItem {
     Product product;
 
     @ManyToOne
+    @JoinColumn(name = "warehouse_code", referencedColumnName = "warehouse_code", nullable = false)
+    Warehouse warehouse;
+
+    @ManyToOne
     @JoinColumn(name = "exchangeNote_id", nullable = false)
     ExchangeNote exchangeNote;
 
-    @Column(nullable = false)
-    Integer quantity;
+    @Column(name = "quantity", nullable = false)
+    int quantity;
 }

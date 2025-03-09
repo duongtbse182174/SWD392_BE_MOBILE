@@ -38,8 +38,6 @@ public class StockCheckService {
     ProductRepository productRepository;
     WarehouseRepository warehouseRepository;
     StockCheckMapper stockCheckMapper;
-    UserService userService;
-    UserMapper userMapper;
 
     public StockCheckNoteResponse createStockCheckNote(StockCheckNoteRequest request) {
         log.info("Creating stock check note for warehouse: {}", request.getWarehouseCode());
@@ -81,14 +79,10 @@ public class StockCheckService {
 
                 log.info("Processing product: {}", productRequest.getProductCode());
 
-                // Tìm thông tin tồn kho hiện tại
-                Stock stock = stockRepository.findByProduct_ProductCode(productRequest.getProductCode());
-                if (stock == null) {
-                    throw new AppException(ErrorCode.STOCK_NOT_FOUND);
-                }
+                // Lấy số lượng hiện tại trực tiếp từ Product
+                int lastQuantity = product.getQuantity();
+                int actualQuantity = productRequest.getActualQuantity();
 
-                Integer expectedQuantity = stock.getQuantity();
-                Integer actualQuantity = productRequest.getActualQuantity();
 
                 // Tạo chi tiết kiểm kho
                 StockCheckProduct stockCheckProduct = new StockCheckProduct();
