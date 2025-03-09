@@ -47,19 +47,19 @@ public class StockTransactionController {
                 .build();
     }
 
-    // Lấy danh sách tất cả giao dịch
-    @GetMapping("/all")
-    public ApiResponse<List<StockExchangeResponse>> getAllTransactions() {
-        return ApiResponse.<List<StockExchangeResponse>>builder()
-                .result(stockTransactionService.getAllTransactions())
-                .build();
-    }
-
-    // Lấy danh sách giao dịch theo mã kho
-    @GetMapping("/warehouse/{warehouseCode}")
-    public ApiResponse<List<StockExchangeResponse>> getTransactionsByWarehouse(@PathVariable String warehouseCode) {
-        return ApiResponse.<List<StockExchangeResponse>>builder()
-                .result(stockTransactionService.getTransactionsByWarehouse(warehouseCode))
-                .build();
-    }
+//    // Lấy danh sách tất cả giao dịch
+//    @GetMapping("/all")
+//    public ApiResponse<List<StockExchangeResponse>> getAllTransactions() {
+//        return ApiResponse.<List<StockExchangeResponse>>builder()
+//                .result(stockTransactionService.getAllTransactions())
+//                .build();
+//    }
+//
+//    // Lấy danh sách giao dịch theo mã kho
+//    @GetMapping("/warehouse/{warehouseCode}")
+//    public ApiResponse<List<StockExchangeResponse>> getTransactionsByWarehouse(@PathVariable String warehouseCode) {
+//        return ApiResponse.<List<StockExchangeResponse>>builder()
+//                .result(stockTransactionService.getTransactionsByWarehouse(warehouseCode))
+//                .build();
+//    }
 }
