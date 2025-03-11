@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
 public interface StockTransactionMapper {
     @Mapping(source = "exchangeNoteId", target = "transactionId")
     @Mapping(source = "transactionType", target = "transactionType")
-    @Mapping(source = "sourceType", target = "sourceType")
     @Mapping(source = "sourceWarehouse.warehouseId", target = "sourceWarehouseId")
     @Mapping(source = "destinationWarehouse.warehouseId", target = "destinationWarehouseId")
     @Mapping(source = "createdBy.userCode", target = "createdBy")
+    @Mapping(source = "approvedBy.userCode", target = "approvedBy")
     @Mapping(source = "status", target = "status")
     @Mapping(source = "noteItems", target = "items", qualifiedByName = "mapNoteItems")
     StockExchangeResponse toResponse(ExchangeNote transaction);

@@ -18,7 +18,6 @@ import swd392.app.entity.User;
 import swd392.app.entity.Warehouse;
 import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.StockTransactionType;
-import swd392.app.enums.SourceType;
 import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;
 import swd392.app.mapper.StockTransactionMapper;
@@ -74,7 +73,6 @@ public class StockTransactionService {
         if (authentication == null) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-
         String userName = authentication.getName();
         User checker = userRepository.findByEmail(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
@@ -84,7 +82,6 @@ public class StockTransactionService {
         transaction.setExchangeNoteId(UUID.randomUUID().toString());
         transaction.setDate(LocalDate.now());
         transaction.setTransactionType(request.getTransactionType());
-        transaction.setSourceType(request.getSourceType());
         transaction.setSourceWarehouse(sourceWarehouse);
         transaction.setDestinationWarehouse(destinationWarehouse);
         transaction.setCreatedBy(checker);
@@ -106,7 +103,6 @@ public class StockTransactionService {
         List<NoteItemResponse> noteItemResponses = noteItems.stream()
                 .map(noteItemMapper::toResponse)
                 .collect(Collectors.toList());
-
         StockExchangeResponse response = stockTransactionMapper.toResponse(transaction);
         response.setItems(noteItemResponses);
 
@@ -119,11 +115,9 @@ public class StockTransactionService {
 
         ExchangeNote exchangeNote = stockTransactionRepository.findById(exchangeNoteId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-
         if (exchangeNote.getStatus() != StockExchangeStatus.pending) {
             throw new AppException(ErrorCode.TRANSACTION_CANNOT_BE_MODIFIED);
         }
-
         exchangeNote.setStatus(StockExchangeStatus.accepted);
         stockTransactionRepository.save(exchangeNote);
 
@@ -131,7 +125,6 @@ public class StockTransactionService {
             List<NoteItem> noteItems = temporaryNoteItems.get(exchangeNoteId);
             exchangeNote.setNoteItems(noteItems);
         }
-
         log.info("Giao dịch đã được duyệt thành công.");
         return buildExchangeResponse(exchangeNote);
     }
@@ -149,6 +142,19 @@ public class StockTransactionService {
             throw new AppException(ErrorCode.TRANSACTION_CANNOT_BE_FINALIZED);
         }
 
+        // Lấy thông tin người dùng hiện tại (manager)
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        String userName = authentication.getName();
+        User manager = userRepository.findByEmail(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
+        // Cập nhật approvedBy là manager hiện tại
+        exchangeNote.setApprovedBy(manager);
+
         // Lấy danh sách các NoteItem từ bản đồ tạm thời
         List<NoteItem> noteItems = temporaryNoteItems.get(exchangeNoteId);
 
@@ -156,12 +162,11 @@ public class StockTransactionService {
             throw new AppException(ErrorCode.NOTE_ITEMS_NOT_FOUND);
         }
 
-        // Nếu trạng thái là finished, cộng dồn lượng sản phẩm cho NoteItem và lưu vào database
         if (isFinished) {
             Map<String, NoteItem> aggregatedNoteItems = new HashMap<>();
 
             for (NoteItem noteItem : noteItems) {
-                String key = noteItem.getProduct().getProductCode() + "-" + noteItem.getWarehouse().getWarehouseCode();
+                String key = noteItem.getProduct().getProductCode();
                 if (aggregatedNoteItems.containsKey(key)) {
                     NoteItem existingNoteItem = aggregatedNoteItems.get(key);
                     existingNoteItem.setQuantity(existingNoteItem.getQuantity() + noteItem.getQuantity());
@@ -175,24 +180,19 @@ public class StockTransactionService {
             exchangeNote.setNoteItems(finalNoteItems);
             exchangeNote.setStatus(StockExchangeStatus.finished);
 
-            // Xóa các NoteItem đã lưu vào cơ sở dữ liệu khỏi bản đồ tạm thời
             temporaryNoteItems.remove(exchangeNoteId);
         } else {
-            // Nếu rejected, xóa tất cả NoteItems tạm thời
             temporaryNoteItems.remove(exchangeNoteId);
             exchangeNote.setNoteItems(new ArrayList<>());
             exchangeNote.setStatus(StockExchangeStatus.rejected);
         }
 
-        // Lưu trạng thái mới của giao dịch
         stockTransactionRepository.save(exchangeNote);
 
-        // Nếu includeItems=true và là finished, gán noteItems vào response
         if (includeItems && isFinished) {
             exchangeNote.setNoteItems(noteItems);
         }
 
-        // Chuyển đổi dữ liệu thành response
         StockExchangeResponse response = stockTransactionMapper.toResponse(exchangeNote);
 
         if (isFinished && !noteItems.isEmpty()) {
@@ -210,98 +210,69 @@ public class StockTransactionService {
      * Phương thức để tạo hoặc cập nhật NoteItem từ danh sách request
      */
     private List<NoteItem> createOrUpdateNoteItems(
+
             List<TransactionItemRequest> itemRequests,
             ExchangeNote exchangeNote,
             Warehouse sourceWarehouse,
             Warehouse destinationWarehouse,
             StockTransactionType transactionType) {
-
+        log.info("vào hàm createOrUpdate");
         List<NoteItem> noteItems = new ArrayList<>();
 
         for (TransactionItemRequest itemRequest : itemRequests) {
             var product = productRepository.findByProductCode(itemRequest.getProductCode())
-                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+                    .orElseThrow(() -> {
+                        log.error("Product not found: {}", itemRequest.getProductCode());
+                        return new AppException(ErrorCode.PRODUCT_NOT_FOUND);
+                    });
 
-            Warehouse warehouse = null;
+            log.info("Product found: {} with quantity: {}", product.getProductCode(), itemRequest.getQuantity());
             int quantity = itemRequest.getQuantity();
+            Warehouse warehouse;
 
             switch (transactionType) {
                 case IMPORT:
-                    if (exchangeNote.getSourceType() == SourceType.EXTERNAL) {
-                        warehouse = destinationWarehouse;
-                    } else if (exchangeNote.getSourceType() == SourceType.INTERNAL) {
-                        if (product == null) {
-                            throw new AppException(ErrorCode.PRODUCT_NOT_FOUND);
-                        }
-                        warehouse = destinationWarehouse;
-                    } else {
-                        throw new AppException(ErrorCode.INVALID_SOURCE_TYPE);
-                    }
+                    warehouse = destinationWarehouse;
                     break;
 
                 case EXPORT:
-                    if (exchangeNote.getSourceType() != SourceType.EXTERNAL) {
-                        throw new AppException(ErrorCode.INVALID_SOURCE_TYPE);
-                    }
                     warehouse = sourceWarehouse;
-                    Optional<NoteItem> sourceNoteItemOptional = noteItemRepository.findByProduct_ProductCodeAndWarehouse_WarehouseCode(
-                            itemRequest.getProductCode(), sourceWarehouse.getWarehouseCode());
-                    if (sourceNoteItemOptional.isPresent()) {
-                        NoteItem sourceNoteItem = sourceNoteItemOptional.get();
-                        if (sourceNoteItem.getQuantity() < itemRequest.getQuantity()) {
-                            throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
-                        }
-                        quantity = -quantity;
-                    } else {
-                        throw new AppException(ErrorCode.NOTE_ITEMS_NOT_FOUND);
-                    }
-                    break;
-
-                case TRANSFER:
-                    Optional<NoteItem> transferSourceNoteItemOptional = noteItemRepository.findByProduct_ProductCodeAndWarehouse_WarehouseCode(
-                            itemRequest.getProductCode(), sourceWarehouse.getWarehouseCode());
-                    if (transferSourceNoteItemOptional.isPresent()) {
-                        NoteItem sourceNoteItem = transferSourceNoteItemOptional.get();
-                        if (sourceNoteItem.getQuantity() < itemRequest.getQuantity()) {
-                            throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
-                        }
-                        sourceNoteItem.setQuantity(sourceNoteItem.getQuantity() - itemRequest.getQuantity());
-                        sourceNoteItem.setExchangeNote(exchangeNote);
-                        noteItems.add(sourceNoteItem);
-                    } else {
-                        throw new AppException(ErrorCode.NOTE_ITEMS_NOT_FOUND);
-                    }
-
-                    warehouse = destinationWarehouse;
+//                    quantity = -quantity; // Phiếu xuất sẽ mang giá trị âm để biểu thị xuất kho
                     break;
 
                 default:
                     throw new AppException(ErrorCode.INVALID_TRANSACTION_TYPE);
             }
-
-            Optional<NoteItem> optionalNoteItem = noteItemRepository.findByProduct_ProductCodeAndWarehouse_WarehouseCode(
-                    itemRequest.getProductCode(), warehouse.getWarehouseCode());
+            log.info("Transaction type: {}", transactionType);
+            log.info("Initial quantity for product {}: {}", product.getProductCode(), quantity);
+            log.info("productCode: {}", itemRequest.getProductCode());
+            String productCode = itemRequest.getProductCode();
+            Optional<NoteItem> optionalNoteItem = noteItems.stream()
+                    .filter(n -> n.getProduct().getProductCode().equals(productCode))
+                    .findFirst();
 
             if (optionalNoteItem.isPresent()) {
                 NoteItem existingNoteItem = optionalNoteItem.get();
                 existingNoteItem.setQuantity(existingNoteItem.getQuantity() + quantity);
                 existingNoteItem.setExchangeNote(exchangeNote);
-                noteItems.add(existingNoteItem);
+                log.info("Updated NoteItem for product {}: {}", productCode, existingNoteItem.getQuantity());
             } else {
+                log.warn("NoteItem not found for product: {}, creating new entry.", productCode);
                 NoteItem newNoteItem = new NoteItem();
                 newNoteItem.setNoteItemId(UUID.randomUUID().toString());
                 newNoteItem.setNoteItemCode(UUID.randomUUID().toString().substring(0, 6));
                 newNoteItem.setExchangeNote(exchangeNote);
                 newNoteItem.setProduct(product);
-                newNoteItem.setWarehouse(warehouse);
+                log.info("Product: {}", product);
                 newNoteItem.setQuantity(quantity);
+                log.info("Created new NoteItem with quantity: {}", newNoteItem.getQuantity());
                 noteItems.add(newNoteItem);
             }
+
         }
 
         return noteItems;
     }
-
 
     /**
      * Phương thức buildExchangeResponse để tạo response đầy đủ
