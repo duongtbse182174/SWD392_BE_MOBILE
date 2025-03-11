@@ -5,9 +5,9 @@ server:
 
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/InventoryManagement"
+    url: jdbc:mysql://root:NWMwzayxQMFVGlFluNGkwGzMxHLBRgnF@mysql.railway.internal:3306/railway
     username: root
-    password: root
+    password: NWMwzayxQMFVGlFluNGkwGzMxHLBRgnF
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,10 +18,6 @@ openapi:
     api-docs: api-service
     server: http://localhost:8080
     title: API Service
-<<<<<<< HEAD
-    version: 1.0.0
-=======
     version: 1.0.0
 jwt:
   signerKey: "eaRge+NAiFb7HQITA/QcCaDmS7QXJlwy7UpOAJj5/ddqoWCYQquoPXkget8OK+zA"
->>>>>>> Duong
