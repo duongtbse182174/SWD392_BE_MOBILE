@@ -13,6 +13,7 @@ import swd392.app.dto.request.IntrospectRequest;
 import swd392.app.dto.response.ApiResponse;
 import swd392.app.dto.response.AuthenticationResponse;
 import swd392.app.dto.response.IntrospectResponse;
+import swd392.app.entity.LogoutRequest;
 import swd392.app.service.AuthenticationService;
 
 import java.text.ParseException;
@@ -39,6 +40,12 @@ public class AuthenticationController {
         return ApiResponse.<IntrospectResponse>builder()
                 .result(result)
                 .build();
+    }
+
+    @PostMapping("/logout")
+    ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
+        return ApiResponse.<Void>builder().build();
     }
 }
 
