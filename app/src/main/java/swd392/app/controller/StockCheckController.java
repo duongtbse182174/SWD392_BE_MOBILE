@@ -46,12 +46,24 @@ public class StockCheckController {
                 .build();
     }
 
-    @PutMapping("/approve")
+    // Duyệt phiếu kiểm kho
+    @PostMapping("/approve/{id}")
     public ApiResponse<StockCheckNoteResponse> approveStockCheck(
-            @Valid @RequestBody StockCheckApprovalRequest request) {
-        log.info("Approving stock check with ID: {}", request.getStockCheckNoteId());
+            @PathVariable String id
+    ) {
         return ApiResponse.<StockCheckNoteResponse>builder()
-                .result(stockCheckService.approveStockCheck(request))
+                .result(stockCheckService.approveStockCheck(id))
+                .build();
+    }
+
+    // Hoàn tất phiếu kiểm kho
+    @PostMapping("/finalize/{id}")
+    public ApiResponse<StockCheckNoteResponse> finalizeStockCheck(
+            @PathVariable String id,
+            @RequestParam boolean isFinished
+    ) {
+        return ApiResponse.<StockCheckNoteResponse>builder()
+                .result(stockCheckService.finalizeStockCheck(id, isFinished))
                 .build();
     }
 }

@@ -5,25 +5,21 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import swd392.app.dto.request.StockCheckApprovalRequest;
 import swd392.app.dto.request.StockCheckNoteRequest;
-import swd392.app.dto.request.StockCheckProductRequest;
 import swd392.app.dto.response.StockCheckNoteResponse;
 import swd392.app.entity.*;
 import swd392.app.enums.StockCheckStatus;
 import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;
 import swd392.app.mapper.StockCheckMapper;
-import swd392.app.mapper.UserMapper;
 import swd392.app.repository.*;
+
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,152 +27,147 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class StockCheckService {
+
     StockCheckNoteRepository stockCheckNoteRepository;
     StockCheckProductRepository stockCheckProductRepository;
     UserRepository userRepository;
     ProductRepository productRepository;
     WarehouseRepository warehouseRepository;
     StockCheckMapper stockCheckMapper;
-    UserService userService;
-    UserMapper userMapper;
+    NoteItemRepository noteItemRepository;
 
+    Map<String, StockCheckNote> temporaryStockCheckNotes = new HashMap<>();
+
+    @PreAuthorize("hasRole('STAFF')")
     public StockCheckNoteResponse createStockCheckNote(StockCheckNoteRequest request) {
-        log.info("Creating stock check note for warehouse: {}", request.getWarehouseCode());
+        log.info("Tạo phiếu kiểm kho tạm thời cho kho: {}", request.getWarehouseCode());
 
-        try {
-            // Lấy thông tin người dùng hiện tại
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null) {
-                throw new AppException(ErrorCode.UNAUTHENTICATED);
-            }
-
-            String userName = authentication.getName();
-            User checker = userRepository.findByEmail(userName)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
-
-            // Lấy thông tin kho
-            Warehouse warehouse = warehouseRepository.findByWarehouseCode(request.getWarehouseCode())
-                    .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
-
-            // Tạo phiếu kiểm kho mới
-            StockCheckNote stockCheckNote = new StockCheckNote();
-            stockCheckNote.setStockCheckNoteId(UUID.randomUUID().toString());
-            stockCheckNote.setDate(LocalDate.now());
-            stockCheckNote.setWarehouse(warehouse);
-            stockCheckNote.setChecker(checker);
-            stockCheckNote.setDescription(request.getDescription());
-            stockCheckNote.setStockCheckStatus(StockCheckStatus.pending);
-
-            // Lưu phiếu kiểm kho
-            StockCheckNote savedNote = stockCheckNoteRepository.save(stockCheckNote);
-
-            // Xử lý các sản phẩm kiểm kho
-            List<StockCheckProduct> stockCheckProducts = new ArrayList<>();
-
-            for (StockCheckProductRequest productRequest : request.getStockCheckProducts()) {
-                // Tìm sản phẩm
-                Product product = productRepository.findByProductCode(productRequest.getProductCode())
-                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
-                log.info("Processing product: {}", productRequest.getProductCode());
-
-//                // Tìm thông tin tồn kho hiện tại
-//                Product product = stockRepository.findByProduct_ProductCode(productRequest.getProductCode());
-//                if (stock == null) {
-//                    throw new AppException(ErrorCode.STOCK_NOT_FOUND);
-//                }
-
-                Integer expectedQuantity = product.getQuantity();
-                Integer actualQuantity = productRequest.getActualQuantity();
-
-                // Tạo chi tiết kiểm kho
-                StockCheckProduct stockCheckProduct = new StockCheckProduct();
-                stockCheckProduct.setStockCheckProductId(UUID.randomUUID().toString());
-                stockCheckProduct.setStockCheckNote(savedNote);
-                stockCheckProduct.setProduct(product);
-                stockCheckProduct.setExpectedQuantity(expectedQuantity);
-                stockCheckProduct.setActualQuantity(actualQuantity);
-
-                stockCheckProducts.add(stockCheckProduct);
-
-//                // Cập nhật số lượng tồn kho
-//                product.setQuantity(actualQuantity);
-//                productRepository.save(product);
-
-                // Cập nhật số lượng trong bảng Product
-                product.setQuantity(actualQuantity);
-                productRepository.save(product);
-            }
-
-            // Lưu chi tiết kiểm kho
-            stockCheckProductRepository.saveAll(stockCheckProducts);
-            savedNote.setStockCheckProducts(stockCheckProducts);
-
-            log.info("StockCheckNote saved: {}", savedNote);
-            log.info("StockCheckProducts size: {}", savedNote.getStockCheckProducts().size());
-
-            // Chuyển đổi sang response sử dụng mapper
-            return stockCheckMapper.toStockCheckNoteResponse(savedNote);
-
-        } catch (AppException e) {
-            log.error("AppException occurred: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error: ", e);
-            throw new AppException(ErrorCode.UNKNOWN_ERROR);
+        // Xác định người thực hiện kiểm kho
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
+
+        String userName = authentication.getName();
+        User checker = userRepository.findByEmail(userName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
+        // Lấy thông tin kho
+        Warehouse warehouse = warehouseRepository.findByWarehouseCode(request.getWarehouseCode())
+                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
+
+        // Tạo phiếu kiểm kho mới
+        StockCheckNote stockCheckNote = new StockCheckNote();
+        stockCheckNote.setStockCheckNoteId(UUID.randomUUID().toString());
+        stockCheckNote.setDate(LocalDate.now());
+        stockCheckNote.setWarehouse(warehouse);
+        stockCheckNote.setChecker(checker);
+        stockCheckNote.setDescription(request.getDescription());
+        stockCheckNote.setStockCheckStatus(StockCheckStatus.pending);
+
+        StockCheckNote savedStockCheckNote = stockCheckNoteRepository.save(stockCheckNote);
+
+        // Tạo danh sách sản phẩm kiểm kho
+        List<StockCheckProduct> stockCheckProducts = request.getStockCheckProducts().stream()
+                .map(productRequest -> {
+                    Product product = productRepository.findByProductCode(productRequest.getProductCode())
+                            .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+                    Integer totalImport = noteItemRepository.getTotalImportByProductCode(product.getProductCode());
+                    Integer totalExport = noteItemRepository.getTotalExportByProductCode(product.getProductCode());
+
+                    StockCheckProduct stockCheckProduct = new StockCheckProduct();
+                    stockCheckProduct.setStockCheckProductId(UUID.randomUUID().toString());
+                    stockCheckProduct.setStockCheckNote(savedStockCheckNote);
+                    stockCheckProduct.setProduct(product);
+
+                    Optional<StockCheckProduct> lastStockCheckProduct =
+                            stockCheckProductRepository.findTopByProductAndStockCheckNoteWarehouseOrderByStockCheckNoteDateDesc(product, warehouse);
+
+                    stockCheckProduct.setLastQuantity(lastStockCheckProduct.map(StockCheckProduct::getActualQuantity).orElse(0));
+
+                    stockCheckProduct.setActualQuantity(productRequest.getActualQuantity());
+                    stockCheckProduct.setTotalImportQuantity(totalImport != null ? totalImport : 0);
+                    stockCheckProduct.setTotalExportQuantity(totalExport != null ? totalExport : 0);
+                    stockCheckProduct.calculateTheoreticalQuantity();
+
+                    return stockCheckProduct;
+                }).collect(Collectors.toList());
+
+        savedStockCheckNote.setStockCheckProducts(stockCheckProducts);
+        temporaryStockCheckNotes.put(savedStockCheckNote.getStockCheckNoteId(), savedStockCheckNote);
+
+        log.info("Phiếu kiểm kho tạm thời được tạo: {}", savedStockCheckNote.getStockCheckNoteId());
+        return stockCheckMapper.toStockCheckNoteResponse(savedStockCheckNote);
     }
 
-    public StockCheckNoteResponse approveStockCheck(StockCheckApprovalRequest request) {
-        log.info("Approving stock check note: {}", request.getStockCheckNoteId());
+    @PreAuthorize("hasRole('MANAGER')")
+    @Transactional
+    public StockCheckNoteResponse approveStockCheck(String stockCheckNoteId) {
+        log.info("Duyệt phiếu kiểm kho: {}", stockCheckNoteId);
 
-        // Tìm phiếu kiểm kho
-        StockCheckNote stockCheckNote = stockCheckNoteRepository.findById(request.getStockCheckNoteId())
-                .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
-
-        // Chỉ cho phép cập nhật nếu trạng thái hiện tại là PENDING
-        if (stockCheckNote.getStockCheckStatus() != StockCheckStatus.pending) {
-            throw new AppException(ErrorCode.STOCK_CHECK_NOTE_CANNOT_BE_MODIFIED);
+        StockCheckNote stockCheckNote = temporaryStockCheckNotes.get(stockCheckNoteId);
+        if (stockCheckNote == null) {
+            stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
+                    .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
         }
 
-        // Chuyển sang trạng thái ACCEPTED
         stockCheckNote.setStockCheckStatus(StockCheckStatus.accepted);
         stockCheckNoteRepository.save(stockCheckNote);
-        log.info("Stock check note status updated to ACCEPTED");
 
+        log.info("Phiếu kiểm kho đã được duyệt: {}", stockCheckNoteId);
         return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
+    @Transactional
     public StockCheckNoteResponse finalizeStockCheck(String stockCheckNoteId, boolean isFinished) {
-        log.info("Finalizing stock check note: {}", stockCheckNoteId);
+        log.info("Hoàn tất phiếu kiểm kho: {} - Trạng thái: {}", stockCheckNoteId, isFinished);
 
-        StockCheckNote stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
-                .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
-
-        // Chỉ có thể chuyển từ ACCEPTED → FINISHED hoặc REJECTED
-        if (stockCheckNote.getStockCheckStatus() != StockCheckStatus.accepted) {
-            throw new AppException(ErrorCode.STOCK_CHECK_NOTE_CANNOT_BE_FINALIZED);
+        StockCheckNote stockCheckNote = temporaryStockCheckNotes.get(stockCheckNoteId);
+        if (stockCheckNote == null) {
+            stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
+                    .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
         }
 
-        stockCheckNote.setStockCheckStatus(isFinished ? StockCheckStatus.finished : StockCheckStatus.rejected);
-        stockCheckNoteRepository.save(stockCheckNote);
+        if (!isFinished) {
+            log.info("Phiếu kiểm kho bị từ chối: {}", stockCheckNoteId);
+            stockCheckNote.setStockCheckStatus(StockCheckStatus.rejected);
+        } else {
+            for (StockCheckProduct product : stockCheckNote.getStockCheckProducts()) {
+                if (product.getExpectedQuantity() == null) {
+                    product.setExpectedQuantity(0);
+                }
+                if (product.getActualQuantity() == null) {
+                    product.setActualQuantity(0);
+                }
 
-        log.info("Stock check note finalized as: {}", stockCheckNote.getStockCheckStatus());
+                Product existingProduct = productRepository.findByProductCode(product.getProduct().getProductCode())
+                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+                product.setStockCheckNote(stockCheckNote);
+            }
+
+            stockCheckNote.setStockCheckStatus(StockCheckStatus.finished);
+            stockCheckProductRepository.saveAll(stockCheckNote.getStockCheckProducts());
+        }
+
+        stockCheckNoteRepository.save(stockCheckNote);
+        temporaryStockCheckNotes.remove(stockCheckNoteId);
+
+        log.info("Phiếu kiểm kho đã hoàn tất: {}", stockCheckNote.getStockCheckNoteId());
         return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
     }
 
-
     public List<StockCheckNoteResponse> getAllStockCheckNotes() {
-        List<StockCheckNote> notes = stockCheckNoteRepository.findAll();
-        return notes.stream()
-                .map(stockCheckMapper::toStockCheckNoteResponse) // Sử dụng mapper
+        return stockCheckNoteRepository.findAll().stream()
+                .map(stockCheckMapper::toStockCheckNoteResponse)
                 .collect(Collectors.toList());
     }
 
     public List<StockCheckNoteResponse> getStockCheckNotesByWarehouse(String warehouseCode) {
-        List<StockCheckNote> notes = stockCheckNoteRepository.findByWarehouse_WarehouseCode(warehouseCode);
-        return notes.stream()
-                .map(stockCheckMapper::toStockCheckNoteResponse) // Sử dụng mapper
+        return stockCheckNoteRepository.findByWarehouse_WarehouseCode(warehouseCode).stream()
+                .map(stockCheckMapper::toStockCheckNoteResponse)
                 .collect(Collectors.toList());
     }
 }

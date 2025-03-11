@@ -11,6 +11,9 @@ import lombok.experimental.FieldDefaults;
 public class StockCheckProductResponse { //DTO cho phản hồi thông tin sản phẩm kiểm kho
     String productCode;
     String productName;
+    Integer lastQuantity;
+    Integer totalImportQuantity;
+    Integer totalExportQuantity;
     Integer expectedQuantity;
     Integer actualQuantity;
     Integer difference;

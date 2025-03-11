@@ -25,10 +25,6 @@ public class NoteItem {
     Product product;
 
     @ManyToOne
-    @JoinColumn(name = "warehouse_code", referencedColumnName = "warehouse_code", nullable = false)
-    Warehouse warehouse;
-
-    @ManyToOne
     @JoinColumn(name = "exchangeNote_id", nullable = false)
     ExchangeNote exchangeNote;
 
