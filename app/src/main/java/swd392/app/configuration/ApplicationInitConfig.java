@@ -34,9 +34,9 @@ public class ApplicationInitConfig {
             if (roleRepository.count() == 0 ) {
                 // Lấy Role ADMIN từ database
                 List<Role> roles = List.of(
-                        new Role("1", "ADMIN","admin"),
-                        new Role("2", "MANAGER", "manager"),
-                        new Role("3", "STAFF","staff")
+                        new Role("AD", "ADMIN","admin"),
+                        new Role("MA", "MANAGER", "manager"),
+                        new Role("ST", "STAFF","staff")
 
                 );
                 roleRepository.saveAll(roles);
@@ -81,4 +81,3 @@ public class ApplicationInitConfig {
         };
     }
 }
-

@@ -24,17 +24,16 @@ public class UserController {
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
         return ApiResponse.<UserResponse>builder()
-                .code(1000)
                 .result(userService.createUser(request))
                 .build();
     }
 
-//    @GetMapping("/myInfo")
-//    ApiResponse<UserResponse> getMyInfo() {
-//        return ApiResponse.<UserResponse>builder()
-//                .result(userService.getMyInfo())
-//                .build();
-//    }
+    @GetMapping("/myInfo")
+    ApiResponse<UserResponse> getMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
+                .build();
+    }
 //
 //    @GetMapping("/{userId}")
 //    ApiResponse<UserResponse> getUser(@PathVariable("userId") String userId) {

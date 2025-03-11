@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -13,18 +14,12 @@ import lombok.experimental.FieldDefaults;
 @Table(name = "Role")
 public class Role {
     @Id
+    @Column(name = "role_id")
     String roleId;
 
-//    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, unique = true)
+    @Column(name = "role_type")
     String roleType;
 
-    @Column(nullable = false)
+    @Column(name = "role_name", nullable = false)
     String roleName;
-
-//    public enum RoleType {
-//        ADMIN,
-//        MANAGER,
-//        STAFF
-//    }
 }
