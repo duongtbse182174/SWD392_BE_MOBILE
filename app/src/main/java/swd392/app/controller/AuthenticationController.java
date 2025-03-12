@@ -13,7 +13,7 @@ import swd392.app.dto.request.IntrospectRequest;
 import swd392.app.dto.response.ApiResponse;
 import swd392.app.dto.response.AuthenticationResponse;
 import swd392.app.dto.response.IntrospectResponse;
-import swd392.app.entity.LogoutRequest;
+import swd392.app.dto.request.LogoutRequest;
 import swd392.app.service.AuthenticationService;
 
 import java.text.ParseException;

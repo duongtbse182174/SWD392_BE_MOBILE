@@ -33,7 +33,10 @@ public enum ErrorCode {
     CAN_NOT_SYSTEM(1028, "SYSTEM only used for TRANSFER"),
     NOT_ENOUGH_QUANTITY(1029, "Not enough quantity"),
     INVALID_SOURCE_TYPE(1030,"Source type is incorrect"),
-    INVALID_TRANSACTION_TYPE(1031, "Transaction type are: IMPORT, EXPORT, TRANSFER")
+    INVALID_TRANSACTION_TYPE(1031, "Transaction type are: IMPORT, EXPORT, TRANSFER"),
+    STOCK_CHECK_NOTE_INVALID(1032, "Stock check note is invalid"),
+    STOCK_CHECK_CANNOT_BE_MODIFIED(1033, "Stock check note cannot be modified"),
+    STOCK_CHECK_CANNOT_BE_FINALIZED(1034, "Stock check note cannot be finalized"),
     ;
 
     ErrorCode(int code, String message) {

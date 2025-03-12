@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StockCheckNoteRequest { //DTO cho yêu cầu tạo phiếu kiểm kho
-    String userCode;
     String warehouseCode;
     String description;
     List<StockCheckProductRequest> stockCheckProducts;

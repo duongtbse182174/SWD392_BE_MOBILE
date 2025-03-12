@@ -36,7 +36,8 @@ public class StockCheckService {
     StockCheckMapper stockCheckMapper;
     NoteItemRepository noteItemRepository;
 
-    Map<String, StockCheckNote> temporaryStockCheckNotes = new HashMap<>();
+    // Map để lưu trữ StockCheckProduct tạm thời
+    Map<String, List<StockCheckProduct>> temporaryStockCheckProducts = new HashMap<>();
 
     @PreAuthorize("hasRole('STAFF')")
     public StockCheckNoteResponse createStockCheckNote(StockCheckNoteRequest request) {
@@ -65,9 +66,10 @@ public class StockCheckService {
         stockCheckNote.setDescription(request.getDescription());
         stockCheckNote.setStockCheckStatus(StockCheckStatus.pending);
 
+        // Lưu phiếu kiểm kho nhưng CHƯA lưu chi tiết sản phẩm
         StockCheckNote savedStockCheckNote = stockCheckNoteRepository.save(stockCheckNote);
 
-        // Tạo danh sách sản phẩm kiểm kho
+        // Tạo danh sách sản phẩm kiểm kho nhưng CHỈ LƯU VÀO MAP TẠM THỜI
         List<StockCheckProduct> stockCheckProducts = request.getStockCheckProducts().stream()
                 .map(productRequest -> {
                     Product product = productRepository.findByProductCode(productRequest.getProductCode())
@@ -94,8 +96,12 @@ public class StockCheckService {
                     return stockCheckProduct;
                 }).collect(Collectors.toList());
 
+        // QUAN TRỌNG: Chỉ lưu vào bộ nhớ tạm thời, không lưu vào database
+        // Lưu StockCheckProducts vào map tạm thời thay vì lưu cả StockCheckNote
+        temporaryStockCheckProducts.put(savedStockCheckNote.getStockCheckNoteId(), stockCheckProducts);
+
+        // Gán danh sách stockCheckProducts cho response nhưng không lưu vào database
         savedStockCheckNote.setStockCheckProducts(stockCheckProducts);
-        temporaryStockCheckNotes.put(savedStockCheckNote.getStockCheckNoteId(), savedStockCheckNote);
 
         log.info("Phiếu kiểm kho tạm thời được tạo: {}", savedStockCheckNote.getStockCheckNoteId());
         return stockCheckMapper.toStockCheckNoteResponse(savedStockCheckNote);
@@ -106,14 +112,27 @@ public class StockCheckService {
     public StockCheckNoteResponse approveStockCheck(String stockCheckNoteId) {
         log.info("Duyệt phiếu kiểm kho: {}", stockCheckNoteId);
 
-        StockCheckNote stockCheckNote = temporaryStockCheckNotes.get(stockCheckNoteId);
-        if (stockCheckNote == null) {
-            stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
-                    .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
+        // Lấy phiếu kiểm kho từ database
+        StockCheckNote stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
+                .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
+
+        // Kiểm tra trạng thái hiện tại
+        if (stockCheckNote.getStockCheckStatus() != StockCheckStatus.pending) {
+            throw new AppException(ErrorCode.STOCK_CHECK_CANNOT_BE_MODIFIED);
         }
 
+        // Cập nhật trạng thái thành accepted nhưng không lưu StockCheckProducts
         stockCheckNote.setStockCheckStatus(StockCheckStatus.accepted);
         stockCheckNoteRepository.save(stockCheckNote);
+
+        // Tạo đối tượng response với các sản phẩm tạm thời nếu cần
+        StockCheckNoteResponse response = stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
+
+        // Lấy sản phẩm từ bộ nhớ tạm thời nếu cần cho response
+//        List<StockCheckProduct> stockCheckProducts = temporaryStockCheckProducts.get(stockCheckNoteId);
+//        if (stockCheckProducts != null) {
+//           stockCheckNote.setStockCheckProducts(stockCheckProducts);
+//        }
 
         log.info("Phiếu kiểm kho đã được duyệt: {}", stockCheckNoteId);
         return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
@@ -124,36 +143,48 @@ public class StockCheckService {
     public StockCheckNoteResponse finalizeStockCheck(String stockCheckNoteId, boolean isFinished) {
         log.info("Hoàn tất phiếu kiểm kho: {} - Trạng thái: {}", stockCheckNoteId, isFinished);
 
-        StockCheckNote stockCheckNote = temporaryStockCheckNotes.get(stockCheckNoteId);
-        if (stockCheckNote == null) {
-            stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
-                    .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
+        // Lấy phiếu kiểm kho từ database
+        StockCheckNote stockCheckNote = stockCheckNoteRepository.findById(stockCheckNoteId)
+                .orElseThrow(() -> new AppException(ErrorCode.STOCK_CHECK_NOTE_NOT_FOUND));
+
+        // Kiểm tra trạng thái hiện tại
+        if (stockCheckNote.getStockCheckStatus() != StockCheckStatus.accepted) {
+            throw new AppException(ErrorCode.STOCK_CHECK_CANNOT_BE_FINALIZED);
         }
 
-        if (!isFinished) {
-            log.info("Phiếu kiểm kho bị từ chối: {}", stockCheckNoteId);
-            stockCheckNote.setStockCheckStatus(StockCheckStatus.rejected);
-        } else {
-            for (StockCheckProduct product : stockCheckNote.getStockCheckProducts()) {
+        // Lấy danh sách các StockCheckProduct từ bản đồ tạm thời
+        List<StockCheckProduct> stockCheckProducts = temporaryStockCheckProducts.get(stockCheckNoteId);
+
+        if (stockCheckProducts == null || stockCheckProducts.isEmpty()) {
+            throw new AppException(ErrorCode.STOCK_CHECK_PRODUCTS_NOT_FOUND);
+        }
+
+        if (isFinished) {
+            // Xử lý và lưu các StockCheckProduct vào database
+            for (StockCheckProduct product : stockCheckProducts) {
                 if (product.getExpectedQuantity() == null) {
                     product.setExpectedQuantity(0);
                 }
                 if (product.getActualQuantity() == null) {
                     product.setActualQuantity(0);
                 }
-
-                Product existingProduct = productRepository.findByProductCode(product.getProduct().getProductCode())
-                        .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
-
                 product.setStockCheckNote(stockCheckNote);
             }
 
+            // QUAN TRỌNG: Lưu tất cả các StockCheckProduct vào database trước
+            stockCheckProducts = stockCheckProductRepository.saveAll(stockCheckProducts);
+
+            // Sau đó mới cập nhật stockCheckNote
+            stockCheckNote.setStockCheckProducts(stockCheckProducts);
             stockCheckNote.setStockCheckStatus(StockCheckStatus.finished);
-            stockCheckProductRepository.saveAll(stockCheckNote.getStockCheckProducts());
+        } else {
+            // Từ chối phiếu kiểm kho, không lưu StockCheckProducts
+            stockCheckNote.setStockCheckStatus(StockCheckStatus.rejected);
         }
 
+        // Lưu phiếu kiểm kho và xóa dữ liệu tạm thời
         stockCheckNoteRepository.save(stockCheckNote);
-        temporaryStockCheckNotes.remove(stockCheckNoteId);
+        temporaryStockCheckProducts.remove(stockCheckNoteId);
 
         log.info("Phiếu kiểm kho đã hoàn tất: {}", stockCheckNote.getStockCheckNoteId());
         return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
