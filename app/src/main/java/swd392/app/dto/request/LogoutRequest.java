@@ -1,4 +1,4 @@
-package swd392.app.entity;
+package swd392.app.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
