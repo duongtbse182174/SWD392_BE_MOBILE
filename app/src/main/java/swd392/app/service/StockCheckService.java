@@ -75,8 +75,10 @@ public class StockCheckService {
                     Product product = productRepository.findByProductCode(productRequest.getProductCode())
                             .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-                    Integer totalImport = noteItemRepository.getTotalImportByProductCode(product.getProductCode());
-                    Integer totalExport = noteItemRepository.getTotalExportByProductCode(product.getProductCode());
+                    Integer totalImport = noteItemRepository.getTotalImportByProductCodeAndWarehouse(
+                            product.getProductCode(), request.getWarehouseCode());
+                    Integer totalExport = noteItemRepository.getTotalExportByProductCodeAndWarehouse(
+                            product.getProductCode(), request.getWarehouseCode());
 
                     StockCheckProduct stockCheckProduct = new StockCheckProduct();
                     stockCheckProduct.setStockCheckProductId(UUID.randomUUID().toString());
@@ -127,12 +129,6 @@ public class StockCheckService {
 
         // Tạo đối tượng response với các sản phẩm tạm thời nếu cần
         StockCheckNoteResponse response = stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
-
-        // Lấy sản phẩm từ bộ nhớ tạm thời nếu cần cho response
-//        List<StockCheckProduct> stockCheckProducts = temporaryStockCheckProducts.get(stockCheckNoteId);
-//        if (stockCheckProducts != null) {
-//           stockCheckNote.setStockCheckProducts(stockCheckProducts);
-//        }
 
         log.info("Phiếu kiểm kho đã được duyệt: {}", stockCheckNoteId);
         return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
