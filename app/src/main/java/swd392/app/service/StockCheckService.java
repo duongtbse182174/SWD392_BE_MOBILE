@@ -86,9 +86,22 @@ public class StockCheckService {
                     stockCheckProduct.setProduct(product);
 
                     Optional<StockCheckProduct> lastStockCheckProduct =
-                            stockCheckProductRepository.findTopByProductAndStockCheckNoteWarehouseOrderByStockCheckNoteDateDesc(product, warehouse);
+                            stockCheckProductRepository.findLatestStockCheck(product.getProductCode(), warehouse.getWarehouseCode());
 
-                    stockCheckProduct.setLastQuantity(lastStockCheckProduct.map(StockCheckProduct::getActualQuantity).orElse(0));
+                    if (lastStockCheckProduct.isPresent()) {
+                        log.info("Lần kiểm kho trước của sản phẩm {} tại kho {} có số lượng: {}",
+                                product.getProductCode(),
+                                warehouse.getWarehouseCode(),
+                                lastStockCheckProduct.get().getActualQuantity());
+                    } else {
+                        log.warn("Không tìm thấy lần kiểm kho trước của sản phẩm {} tại kho {}",
+                                product.getProductCode(),
+                                warehouse.getWarehouseCode());
+                    }
+
+                    stockCheckProduct.setLastQuantity(
+                            lastStockCheckProduct.map(StockCheckProduct::getActualQuantity).orElse(0)
+                    );
 
                     stockCheckProduct.setActualQuantity(productRequest.getActualQuantity());
                     stockCheckProduct.setTotalImportQuantity(totalImport != null ? totalImport : 0);
