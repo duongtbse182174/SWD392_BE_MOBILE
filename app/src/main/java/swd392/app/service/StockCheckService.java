@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import swd392.app.dto.request.StockCheckNoteRequest;
 import swd392.app.dto.response.StockCheckNoteResponse;
 import swd392.app.entity.*;
+import swd392.app.enums.StockCheckProductStatus;
 import swd392.app.enums.StockCheckStatus;
 import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;
@@ -108,12 +109,14 @@ public class StockCheckService {
                     stockCheckProduct.setTotalExportQuantity(totalExport != null ? totalExport : 0);
                     stockCheckProduct.calculateTheoreticalQuantity();
 
+                    // Thêm trạng thái TEMPORARY (cần thêm trường này vào entity StockCheckProduct)
+                    stockCheckProduct.setStockCheckProductStatus(StockCheckProductStatus.temporary);
+
                     return stockCheckProduct;
                 }).collect(Collectors.toList());
 
-        // QUAN TRỌNG: Chỉ lưu vào bộ nhớ tạm thời, không lưu vào database
-        // Lưu StockCheckProducts vào map tạm thời thay vì lưu cả StockCheckNote
-        temporaryStockCheckProducts.put(savedStockCheckNote.getStockCheckNoteId(), stockCheckProducts);
+        // QUAN TRỌNG: Lưu StockCheckProducts vào database với trạng thái temporary
+        stockCheckProducts = stockCheckProductRepository.saveAll(stockCheckProducts);
 
         // Gán danh sách stockCheckProducts cho response nhưng không lưu vào database
         savedStockCheckNote.setStockCheckProducts(stockCheckProducts);
@@ -161,8 +164,9 @@ public class StockCheckService {
             throw new AppException(ErrorCode.STOCK_CHECK_CANNOT_BE_FINALIZED);
         }
 
-        // Lấy danh sách các StockCheckProduct từ bản đồ tạm thời
-        List<StockCheckProduct> stockCheckProducts = temporaryStockCheckProducts.get(stockCheckNoteId);
+        // Lấy danh sách các StockCheckProduct tạm thời từ database
+        List<StockCheckProduct> stockCheckProducts = stockCheckProductRepository
+                .findByStockCheckNoteAndStockCheckProductStatus(stockCheckNote, StockCheckProductStatus.temporary);
 
         if (stockCheckProducts == null || stockCheckProducts.isEmpty()) {
             throw new AppException(ErrorCode.STOCK_CHECK_PRODUCTS_NOT_FOUND);
@@ -178,6 +182,7 @@ public class StockCheckService {
                     product.setActualQuantity(0);
                 }
                 product.setStockCheckNote(stockCheckNote);
+                product.setStockCheckProductStatus(StockCheckProductStatus.finished);
             }
 
             // QUAN TRỌNG: Lưu tất cả các StockCheckProduct vào database trước
@@ -189,11 +194,12 @@ public class StockCheckService {
         } else {
             // Từ chối phiếu kiểm kho, không lưu StockCheckProducts
             stockCheckNote.setStockCheckStatus(StockCheckStatus.rejected);
+            // Có thể xóa các StockCheckProduct tạm thời nếu phiếu bị từ chối
+            stockCheckProductRepository.deleteAll(stockCheckProducts);
         }
 
         // Lưu phiếu kiểm kho và xóa dữ liệu tạm thời
         stockCheckNoteRepository.save(stockCheckNote);
-        temporaryStockCheckProducts.remove(stockCheckNoteId);
 
         log.info("Phiếu kiểm kho đã hoàn tất: {}", stockCheckNote.getStockCheckNoteId());
         return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);

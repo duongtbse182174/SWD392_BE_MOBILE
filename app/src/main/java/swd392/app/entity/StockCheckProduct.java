@@ -3,6 +3,8 @@ package swd392.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import swd392.app.enums.StockCheckProductStatus;
+import swd392.app.enums.StockCheckStatus;
 
 @Data
 @NoArgsConstructor
@@ -38,6 +40,10 @@ public class StockCheckProduct {
 
     @Column(name = "expected_quantity", nullable = false)
     Integer expectedQuantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stockCheckProduct_status", columnDefinition = "ENUM('temporary','finished') DEFAULT 'temporary'")
+    StockCheckProductStatus stockCheckProductStatus;
 
     public void calculateTheoreticalQuantity() {
         this.expectedQuantity = this.lastQuantity

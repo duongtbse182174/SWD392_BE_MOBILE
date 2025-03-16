@@ -5,11 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import swd392.app.entity.StockCheckNote;
 import swd392.app.entity.Product;
 import swd392.app.entity.StockCheckProduct;
 import swd392.app.entity.Warehouse;
+import swd392.app.enums.StockCheckProductStatus;
 import swd392.app.enums.StockCheckStatus;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,5 +29,10 @@ public interface StockCheckProductRepository extends JpaRepository<StockCheckPro
     Optional<StockCheckProduct> findLatestStockCheck(
             @Param("productCode") String productCode,
             @Param("warehouseCode") String warehouseCode
+    );
+
+    List<StockCheckProduct> findByStockCheckNoteAndStockCheckProductStatus(
+            StockCheckNote stockCheckNote,
+            StockCheckProductStatus status
     );
 }
