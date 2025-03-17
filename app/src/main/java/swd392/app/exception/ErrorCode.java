@@ -14,7 +14,6 @@ public enum ErrorCode {
     PRODUCT_CODE_EXIST(1010, "Product is exist"),
     PERMISSION_ERROR(1011, "You don't have permission to do this"),
     FULLNAME_REQUIRED(1012, "Fullname must not blank"),
-    // Thêm mã lỗi mới cho chức năng kiểm kho
     WAREHOUSE_NOT_FOUND(1013, "Warehouse not found"),
     PRODUCT_NOT_FOUND(1014, "Product not found"),
     STOCK_CHECK_PRODUCTS_NOT_FOUND(1015, "Stock record not found for this product"),
@@ -40,7 +39,8 @@ public enum ErrorCode {
     CATEGORY_CODE_EXIST(1035, "Category code is exist"),
     CATEGORY_NOT_FOUND(1036, "Category code is not found"),
     PRODUCT_TYPE_CODE_EXIST(1037, "Product type is exist"),
-    PRODUCT_TYPE_NOT_FOUND(1038, "Product type is not found")
+    PRODUCT_TYPE_NOT_FOUND(1038, "Product type is not found"),
+    UNAUTHORIZED_ACTION(1039, "You are not authorized to perform this action"),
     ;
 
     ErrorCode(int code, String message) {

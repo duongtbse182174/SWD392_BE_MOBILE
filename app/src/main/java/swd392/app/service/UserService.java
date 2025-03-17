@@ -22,6 +22,8 @@ import swd392.app.repository.RoleRepository;
 import swd392.app.repository.UserRepository;
 import swd392.app.repository.WarehouseRepository;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)

@@ -22,7 +22,6 @@ public interface StockCheckMapper {
             @Mapping(source = "stockCheckStatus", target = "stockCheckStatus"), // Thêm dòng này
             @Mapping(source = "stockCheckProducts", target = "stockCheckProducts")
     })
-
     StockCheckNoteResponse toStockCheckNoteResponse(StockCheckNote stockCheckNote);
 
     @Mapping(source = "product.productCode", target = "productCode")
