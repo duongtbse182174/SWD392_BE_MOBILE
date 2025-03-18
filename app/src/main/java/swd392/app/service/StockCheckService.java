@@ -240,7 +240,7 @@ public class StockCheckService {
         StockCheckNote updatedNote = stockCheckNoteRepository.save(stockCheckNote);
 
         log.info("Phiếu kiểm kho đã hoàn tất: {}", stockCheckNote.getStockCheckNoteId());
-        return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
+        return stockCheckMapper.toStockCheckNoteResponse(updatedNote);
     }
 
     /**

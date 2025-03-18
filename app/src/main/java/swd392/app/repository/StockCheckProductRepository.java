@@ -25,6 +25,7 @@ public interface StockCheckProductRepository extends JpaRepository<StockCheckPro
             "JOIN scn.warehouse w " +
             "WHERE p.productCode = :productCode " +
             "AND w.warehouseCode = :warehouseCode " +
+            "AND scn.stockCheckStatus = 'finished' " +  // Only consider finished stock checks
             "ORDER BY scn.date DESC LIMIT 1")
     Optional<StockCheckProduct> findLatestStockCheck(
             @Param("productCode") String productCode,
