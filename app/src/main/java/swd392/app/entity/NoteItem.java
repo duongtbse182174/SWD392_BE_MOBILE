@@ -3,6 +3,7 @@ package swd392.app.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import swd392.app.enums.NoteItemStatus;
 
 @Getter
 @Setter
@@ -30,4 +31,8 @@ public class NoteItem {
 
     @Column(name = "quantity", nullable = false)
     int quantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    NoteItemStatus status;
 }

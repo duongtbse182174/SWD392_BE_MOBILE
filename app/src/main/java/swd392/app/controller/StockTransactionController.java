@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import swd392.app.dto.request.StockExchangeRequest;
 import swd392.app.dto.response.ApiResponse;
 import swd392.app.dto.response.StockExchangeResponse;
+import swd392.app.enums.StockTransactionType;
 import swd392.app.service.StockTransactionService;
 
 import java.util.List;
@@ -25,41 +26,60 @@ public class StockTransactionController {
     }
 
     // Duyệt giao dịch (bổ sung tham số includeItems để quyết định có tải items hay không)
-    @PostMapping("/approve/{id}")
+    @PostMapping("/approve/{exchangeNoteId}")
     public ApiResponse<StockExchangeResponse> approveTransaction(
-            @PathVariable String id,
-            @RequestParam(required = false, defaultValue = "true") boolean includeItems
+            @PathVariable String exchangeNoteId
     ) {
         return ApiResponse.<StockExchangeResponse>builder()
-                .result(stockTransactionService.approveTransaction(id, includeItems))
+                .result(stockTransactionService.approveTransaction(exchangeNoteId))
                 .build();
     }
 
-    // Hoàn tất giao dịch (bổ sung tham số includeItems)
-    @PostMapping("/finalize/{id}")
+
+    @PostMapping("/finalize/{exchangeNoteId}")
     public ApiResponse<StockExchangeResponse> finalizeTransaction(
-            @PathVariable String id,
-            @RequestParam boolean isFinished,
-            @RequestParam(required = false, defaultValue = "true") boolean includeItems
-    ) {
+            @PathVariable String exchangeNoteId,
+            @RequestParam(defaultValue = "false") boolean includeItems) {
         return ApiResponse.<StockExchangeResponse>builder()
-                .result(stockTransactionService.finalizeTransaction(id, isFinished, includeItems))
+                .result(stockTransactionService.finalizeTransaction(exchangeNoteId))
                 .build();
     }
 
-//    // Lấy danh sách tất cả giao dịch
-//    @GetMapping("/all")
-//    public ApiResponse<List<StockExchangeResponse>> getAllTransactions() {
-//        return ApiResponse.<List<StockExchangeResponse>>builder()
-//                .result(stockTransactionService.getAllTransactions())
-//                .build();
-//    }
-//
-//    // Lấy danh sách giao dịch theo mã kho
-//    @GetMapping("/warehouse/{warehouseCode}")
-//    public ApiResponse<List<StockExchangeResponse>> getTransactionsByWarehouse(@PathVariable String warehouseCode) {
-//        return ApiResponse.<List<StockExchangeResponse>>builder()
-//                .result(stockTransactionService.getTransactionsByWarehouse(warehouseCode))
-//                .build();
-//    }
+    @PostMapping("/cancel/{exchangeNoteId}")
+    public ApiResponse<StockExchangeResponse> cancelTransaction(@PathVariable String exchangeNoteId) {
+        return ApiResponse.<StockExchangeResponse>builder()
+                .result(stockTransactionService.cancelTransaction(exchangeNoteId))
+                .build();
+    }
+
+    @GetMapping("/all")
+    public ApiResponse<List<StockExchangeResponse>> getAllTransactions() {
+        return ApiResponse.<List<StockExchangeResponse>>builder()
+                .result(stockTransactionService.getAllTransactions())
+                .build();
+    }
+
+    @GetMapping("/warehouse/{warehouseCode}")
+    public ApiResponse<List<StockExchangeResponse>> getTransactionsByWarehouse(@PathVariable String warehouseCode) {
+        return ApiResponse.<List<StockExchangeResponse>>builder()
+                .result(stockTransactionService.getTransactionsByWarehouse(warehouseCode))
+                .build();
+    }
+
+    @GetMapping("/pending")
+    public ApiResponse<List<StockExchangeResponse>> getPendingTransactions() {
+        return ApiResponse.<List<StockExchangeResponse>>builder()
+                .result(stockTransactionService.getPendingTransactions())
+                .build();
+    }
+
+    @GetMapping("/{exchangeNoteId}")
+    public ApiResponse<StockExchangeResponse> getTransactionById(
+            @PathVariable String exchangeNoteId
+    ) {
+        return ApiResponse.<StockExchangeResponse>builder()
+                .result(stockTransactionService.getTransactionById(exchangeNoteId))
+                .build();
+    }
+
 }

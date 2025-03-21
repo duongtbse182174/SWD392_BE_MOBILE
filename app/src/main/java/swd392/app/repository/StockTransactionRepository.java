@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import swd392.app.entity.ExchangeNote;
+import swd392.app.enums.StockExchangeStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,5 +17,7 @@ public interface StockTransactionRepository extends JpaRepository<ExchangeNote, 
 
     @EntityGraph(attributePaths = "noteItems") // Load luôn các NoteItem khi lấy ExchangeNote
     Optional<ExchangeNote> findById(String exchangeNoteId);
+
+    List<ExchangeNote> findByStatus(StockExchangeStatus status);
 
 }
