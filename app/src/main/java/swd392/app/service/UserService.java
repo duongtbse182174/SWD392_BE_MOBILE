@@ -4,13 +4,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import swd392.app.dto.request.UserCreationRequest;
-import swd392.app.dto.request.UserUpdateRequest;
 import swd392.app.dto.response.UserResponse;
 import swd392.app.entity.Role;
 import swd392.app.entity.Warehouse;
@@ -86,7 +83,6 @@ public class UserService {
 //    @PostAuthorize("returnObject.email == authentication.name")
 //    public UserResponse getUser(String userId){
 //        log.info("In method get user by Id");
-//
 //        return userMapper.toUserResponse(userRepository.findById(userId)
 //                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST)));
 //    }

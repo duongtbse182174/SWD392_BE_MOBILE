@@ -13,8 +13,8 @@ import java.util.List;
 public class StockExchangeRequest {
     String transactionId;
     StockTransactionType transactionType;
-    String sourceWarehouseId;
-    String destinationWarehouseId;
+    String sourceWarehouseCode;
+    String destinationWarehouseCode;
     String createdBy;
     String approvedBy;
     List<TransactionItemRequest> items;

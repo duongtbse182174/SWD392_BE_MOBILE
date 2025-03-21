@@ -22,7 +22,6 @@ public interface StockCheckMapper {
             @Mapping(source = "stockCheckStatus", target = "stockCheckStatus"), // Thêm dòng này
             @Mapping(source = "stockCheckProducts", target = "stockCheckProducts")
     })
-
     StockCheckNoteResponse toStockCheckNoteResponse(StockCheckNote stockCheckNote);
 
     @Mapping(source = "product.productCode", target = "productCode")
@@ -34,15 +33,7 @@ public interface StockCheckMapper {
     @Mapping(expression = "java(stockCheckProduct.getActualQuantity() - stockCheckProduct.getExpectedQuantity())", target = "difference")
     StockCheckProductResponse toStockCheckProductResponse(StockCheckProduct stockCheckProduct);
 
-    @AfterMapping
-    default void calculateExpectedQuantity(@MappingTarget StockCheckProductResponse response, StockCheckProduct stockCheckProduct) {
-        response.setExpectedQuantity(
-                (stockCheckProduct.getLastQuantity() == null ? 0 : stockCheckProduct.getLastQuantity()) +
-                        (stockCheckProduct.getTotalImportQuantity() == null ? 0 : stockCheckProduct.getTotalImportQuantity()) -
-                        (stockCheckProduct.getTotalExportQuantity() == null ? 0 : stockCheckProduct.getTotalExportQuantity())
-        );
-
-    }    // Chuyển đổi List<StockCheckProduct> thành List<StockCheckProductResponse>
+   // Chuyển đổi List<StockCheckProduct> thành List<StockCheckProductResponse>
     default List<StockCheckProductResponse> toStockCheckProductResponses(List<StockCheckProduct> stockCheckProducts) {
         return stockCheckProducts.stream()
                 .map(this::toStockCheckProductResponse)

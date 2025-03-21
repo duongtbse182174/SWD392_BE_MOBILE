@@ -14,8 +14,8 @@ import java.util.List;
 public class StockExchangeResponse {
     String transactionId;
     StockTransactionType transactionType;
-    String sourceWarehouseId;
-    String destinationWarehouseId;
+    String sourceWarehouseCode;
+    String destinationWarehouseCode;
     String createdBy;
     String approvedBy;
     StockExchangeStatus status;

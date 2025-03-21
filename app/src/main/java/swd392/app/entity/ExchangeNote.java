@@ -34,11 +34,11 @@ public class ExchangeNote {
     StockTransactionType transactionType;
 
     @ManyToOne
-    @JoinColumn(name = "source_warehouse_id", referencedColumnName = "warehouse_code", nullable = true)
+    @JoinColumn(name = "source_warehouse_code", referencedColumnName = "warehouse_code", nullable = true)
     Warehouse sourceWarehouse;
 
     @ManyToOne
-    @JoinColumn(name = "destination_warehouse_id", referencedColumnName = "warehouse_code", nullable = true)
+    @JoinColumn(name = "destination_warehouse_code", referencedColumnName = "warehouse_code", nullable = true)
     Warehouse destinationWarehouse;
 
     @ManyToOne

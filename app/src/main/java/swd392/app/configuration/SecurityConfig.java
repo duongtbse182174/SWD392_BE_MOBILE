@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request
                         -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT).permitAll()
                         .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers("/api/**").permitAll()
                         .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2
@@ -57,7 +58,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Cho phép frontend truy cập
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:8080", "http://localhost:60604")); // Cho phép frontend truy cập
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
         configuration.setAllowCredentials(true);
@@ -92,6 +93,7 @@ public class SecurityConfig {
     }
 
     private static final String[] AUTH_WHITELIST = {
+            "**",
             "/api/v1/auth/**",
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",

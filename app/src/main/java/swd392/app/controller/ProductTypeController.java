@@ -14,7 +14,7 @@ import swd392.app.service.ProductTypeService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/productTypes")
+@RequestMapping("/product-types")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
