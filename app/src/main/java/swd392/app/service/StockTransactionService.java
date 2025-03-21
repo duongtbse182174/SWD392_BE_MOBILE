@@ -57,13 +57,13 @@ public class StockTransactionService {
             if (request.getSourceWarehouseCode() == null) {
                 throw new AppException(ErrorCode.WAREHOUSE_REQUIRED);
             }
-            sourceWarehouse = warehouseRepository.findById(request.getSourceWarehouseCode())
+            sourceWarehouse = warehouseRepository.findByWarehouseCode(request.getSourceWarehouseCode())
                     .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
         }
 
         // Kiểm tra kho đích (chỉ cần nếu không phải xuất ra ngoài)
         if (request.getTransactionType() != StockTransactionType.EXPORT) {
-            destinationWarehouse = warehouseRepository.findById(request.getDestinationWarehouseCode())
+            destinationWarehouse = warehouseRepository.findByWarehouseCode(request.getDestinationWarehouseCode())
                     .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
             log.info("Kho đích: {}", destinationWarehouse.getWarehouseName());
         }
