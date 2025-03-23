@@ -282,4 +282,14 @@ public class StockCheckService {
                 .map(stockCheckMapper::toStockCheckNoteResponse)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Xem chi tiết phiếu kiểm kho.
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    public StockCheckNoteResponse getStockCheckNoteDetails(String stockCheckNoteId) {
+        StockCheckNote stockCheckNote = getStockCheckNoteById(stockCheckNoteId);
+        return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
+    }
+
 }

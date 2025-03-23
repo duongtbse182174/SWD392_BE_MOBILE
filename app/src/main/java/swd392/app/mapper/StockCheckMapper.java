@@ -19,7 +19,7 @@ public interface StockCheckMapper {
             @Mapping(source = "warehouse.warehouseCode", target = "warehouseCode"),
             @Mapping(source = "warehouse.warehouseName", target = "warehouseName"),
             @Mapping(source = "checker.fullName", target = "checkerName"),
-            @Mapping(source = "stockCheckStatus", target = "stockCheckStatus"), // Thêm dòng này
+            @Mapping(source = "stockCheckStatus", target = "stockCheckStatus"),
             @Mapping(source = "stockCheckProducts", target = "stockCheckProducts")
     })
     StockCheckNoteResponse toStockCheckNoteResponse(StockCheckNote stockCheckNote);

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import swd392.app.dto.request.StockCheckApprovalRequest;
 import swd392.app.dto.request.StockCheckNoteRequest;
 import swd392.app.dto.response.ApiResponse;
 import swd392.app.dto.response.StockCheckNoteResponse;
@@ -64,6 +63,14 @@ public class StockCheckController {
     ) {
         return ApiResponse.<StockCheckNoteResponse>builder()
                 .result(stockCheckService.finalizeStockCheck(id, isFinished))
+                .build();
+    }
+
+    // Xem chi tiết phiếu kiểm kho
+    @GetMapping("/{id}")
+    public ApiResponse<StockCheckNoteResponse> getStockCheckNoteById(@PathVariable String id) {
+        return ApiResponse.<StockCheckNoteResponse>builder()
+                .result(stockCheckService.getStockCheckNoteDetails(id))
                 .build();
     }
 }
