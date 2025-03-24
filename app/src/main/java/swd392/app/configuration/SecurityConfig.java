@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Configuration
@@ -69,9 +70,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder(){
-
-        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(),"HS512");
+    JwtDecoder jwtDecoder() {
+        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(StandardCharsets.UTF_8), "HS512");
         return NimbusJwtDecoder
                 .withSecretKey(secretKeySpec)
                 .macAlgorithm(MacAlgorithm.HS512)
@@ -79,21 +79,22 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter(){
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
-        // Ngăn việc thêm claim "scope"
-        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
+        // Thay đổi từ "authorities" thành "role" để phù hợp với token
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("role");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
 
-        // Loại bỏ "sub"
+        // Sử dụng "username" làm principal
         jwtAuthenticationConverter.setPrincipalClaimName("username");
 
         return jwtAuthenticationConverter;
     }
+
     @Bean
     PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder(10);

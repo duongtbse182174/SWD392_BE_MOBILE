@@ -43,7 +43,7 @@ public class StockTransactionService {
     StockTransactionMapper stockTransactionMapper;
     NoteItemMapper noteItemMapper;
 
-    @PreAuthorize("hasRole('STAFF')")
+//    @PreAuthorize("hasRole('STAFF')")
     public StockExchangeResponse createTransaction(StockExchangeRequest request) {
         log.info("Bắt đầu tạo giao dịch: {}", request);
 
@@ -63,7 +63,7 @@ public class StockTransactionService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        User checker = userRepository.findByEmail(authentication.getName())
+        User checker = userRepository.findByUserName(authentication.getName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
 
         ExchangeNote transaction = new ExchangeNote();

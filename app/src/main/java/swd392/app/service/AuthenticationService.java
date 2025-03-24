@@ -1,8 +1,8 @@
 package swd392.app.service;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.AccessLevel;
@@ -24,12 +24,17 @@ import swd392.app.exception.AppException;
 import swd392.app.exception.ErrorCode;
 import swd392.app.repository.InvalidatedTokenRepository;
 import swd392.app.repository.UserRepository;
-import java.text.ParseException;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
-import java.util.UUID;
+import java.text.ParseException;
 
 @Slf4j
 @Service
@@ -45,14 +50,14 @@ public class AuthenticationService {
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request){
+    public AuthenticationResponse authenticate(AuthenticationRequest request) {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_EXIST));
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(),
                 user.getPassword());
 
-        if(!authenticated)
+        if (!authenticated)
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         var token = generateToken(user);
@@ -67,39 +72,51 @@ public class AuthenticationService {
                 .build();
     }
 
-    //Build thong tin cua 1 token
-    //De tao 1 token thi chung ta can co header, body( chua nhung noi dung chung ta
-    //gui di trong token
     private String generateToken(User user) {
+        // Tạo header thủ công với thứ tự alg trước typ
+        StringBuilder headerBuilder = new StringBuilder();
+        headerBuilder.append("{");
+        headerBuilder.append("\"alg\":\"HS512\",");
+        headerBuilder.append("\"typ\":\"JWT\"");
+        headerBuilder.append("}");
 
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        // Mã hóa header thành Base64 URL-safe
+        String headerBase64 = Base64URL.encode(headerBuilder.toString()).toString();
 
-        // Thêm các claims bổ sung vào payload
-        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .claim("userId", user.getUserId().toString())
-                .claim("userCode", user.getUserCode())
-                .claim("role", user.getRole().getRoleType())
-                .claim("username", user.getUserName())
-                .claim("warehouseCode", user.getWarehouse().getWarehouseCode())
-                .issueTime(new Date()) // iat
-                .expirationTime(new Date(
-                        Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli()
-                )) // exp
-                .subject(null)
-                .build();
+        // Tạo payload với thứ tự claim chính xác
+        StringBuilder jsonBuilder = new StringBuilder();
+        jsonBuilder.append("{");
+        jsonBuilder.append("\"userId\":\"").append(user.getUserId().toString()).append("\",");
+        jsonBuilder.append("\"userCode\":\"").append(user.getUserCode()).append("\",");
+        jsonBuilder.append("\"role\":\"").append(user.getRole().getRoleType()).append("\",");
+        jsonBuilder.append("\"username\":\"").append(user.getUserName()).append("\",");
+        jsonBuilder.append("\"warehouseCode\":\"").append(user.getWarehouse().getWarehouseCode()).append("\",");
+        jsonBuilder.append("\"iat\":").append(new Date().getTime() / 1000).append(",");
+        jsonBuilder.append("\"exp\":").append(Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli() / 1000);
+        jsonBuilder.append("}");
 
-        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+        // Mã hóa payload thành Base64 URL-safe
+        String payloadBase64 = Base64URL.encode(jsonBuilder.toString()).toString();
 
-        JWSObject jwsObject = new JWSObject(header, payload);
+        // Tạo chuỗi để ký: headerBase64.payloadBase64
+        String signingInput = headerBase64 + "." + payloadBase64;
 
-        // Ký token
+        // Ký chuỗi bằng HMAC-SHA512
+        byte[] signatureBytes;
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
-            return jwsObject.serialize();
-        } catch (JOSEException e) {
-            log.error("Cannot create token");
+            Mac mac = Mac.getInstance("HmacSHA512");
+            mac.init(new SecretKeySpec(SIGNER_KEY.getBytes(StandardCharsets.UTF_8), "HmacSHA512"));
+            signatureBytes = mac.doFinal(signingInput.getBytes(StandardCharsets.UTF_8));
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            log.error("Không thể ký token", e);
             throw new RuntimeException(e);
         }
+
+        // Mã hóa chữ ký thành Base64 URL-safe
+        String signatureBase64 = Base64URL.encode(signatureBytes).toString();
+
+        // Tạo token hoàn chỉnh: headerBase64.payloadBase64.signatureBase64
+        return headerBase64 + "." + payloadBase64 + "." + signatureBase64;
     }
 
     private String buildScope(User user) {
@@ -111,7 +128,6 @@ public class AuthenticationService {
 
         return stringJoiner.toString();
     }
-
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
@@ -138,12 +154,12 @@ public class AuthenticationService {
 
             invalidatedTokenRepository.save(invalidatedToken);
         } catch (AppException exception) {
-            log.info("Token already expired");
+            log.info("Token đã hết hạn");
         }
     }
 
     private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes(StandardCharsets.UTF_8));
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
@@ -151,7 +167,8 @@ public class AuthenticationService {
 
         var verified = signedJWT.verify(verifier);
 
-        if (!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if (!(verified && expiryTime.after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -159,4 +176,3 @@ public class AuthenticationService {
         return signedJWT;
     }
 }
-
