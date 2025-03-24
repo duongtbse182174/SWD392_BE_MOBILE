@@ -76,18 +76,15 @@ public class AuthenticationService {
 
         // Thêm các claims bổ sung vào payload
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUserName())  // Đổi từ email sang username
-                .issuer("user.com")
-                .issueTime(new Date())
+                .issueTime(new Date()) // iat
                 .expirationTime(new Date(
-                        Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli() // Đổi thời gian hết hạn thành 24 giờ
-                ))
-                .jwtID(UUID.randomUUID().toString()) // JWT ID cho login token
-                .claim("userId", user.getUserId().toString())    // Thêm userId
-                .claim("userCode", user.getUserCode())           // Thêm userCode
-                .claim("warehouseCode", user.getWarehouse().getWarehouseCode()) // Thêm warehouseCode
-                .claim("role", user.getRole().getRoleType())     // Đổi 'scope' thành 'role'
-                .claim("username", user.getUserName())           // Thêm username
+                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                )) // exp
+                .claim("userId", user.getUserId().toString())
+                .claim("userCode", user.getUserCode())
+                .claim("warehouseCode", user.getWarehouse().getWarehouseCode())
+                .claim("role", user.getRole().getRoleType())
+                .claim("username", user.getUserName())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
