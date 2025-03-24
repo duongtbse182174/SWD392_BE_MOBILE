@@ -76,15 +76,15 @@ public class AuthenticationService {
 
         // Thêm các claims bổ sung vào payload
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .claim("userId", user.getUserId().toString())
+                .claim("userCode", user.getUserCode())
+                .claim("role", user.getRole().getRoleType())
+                .claim("username", user.getUserName())
+                .claim("warehouseCode", user.getWarehouse().getWarehouseCode())
                 .issueTime(new Date()) // iat
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 )) // exp
-                .claim("userId", user.getUserId().toString())
-                .claim("userCode", user.getUserCode())
-                .claim("warehouseCode", user.getWarehouse().getWarehouseCode())
-                .claim("role", user.getRole().getRoleType())
-                .claim("username", user.getUserName())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());

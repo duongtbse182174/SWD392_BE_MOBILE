@@ -83,8 +83,15 @@ public class SecurityConfig {
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
 
+        // Ngăn việc thêm claim "scope"
+        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
+
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+
+        // Loại bỏ "sub"
+        jwtAuthenticationConverter.setPrincipalClaimName("username");
+
         return jwtAuthenticationConverter;
     }
     @Bean
