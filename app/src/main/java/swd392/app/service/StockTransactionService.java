@@ -219,8 +219,22 @@ public class StockTransactionService {
 
             if (optionalNoteItem.isPresent()) {
                 NoteItem existingNoteItem = optionalNoteItem.get();
-                existingNoteItem.setQuantity(existingNoteItem.getQuantity() + quantity);
+
+                if (transactionType == StockTransactionType.EXPORT) {
+                    // Kiểm tra nếu số lượng bị giảm xuống dưới 0
+                    if (existingNoteItem.getQuantity() < quantity) {
+                        throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+                    }
+                    existingNoteItem.setQuantity(existingNoteItem.getQuantity() - quantity);
+                } else {
+                    existingNoteItem.setQuantity(existingNoteItem.getQuantity() + quantity);
+                }
             } else {
+                if (transactionType == StockTransactionType.EXPORT) {
+                    // Không thể xuất nếu không có hàng
+                    throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+                }
+
                 NoteItem newNoteItem = new NoteItem();
                 newNoteItem.setNoteItemId(UUID.randomUUID().toString());
                 newNoteItem.setNoteItemCode(UUID.randomUUID().toString().substring(0, 6));

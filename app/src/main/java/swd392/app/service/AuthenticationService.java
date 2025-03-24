@@ -74,7 +74,7 @@ public class AuthenticationService {
 
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
-        //Thong tin co ban de build 1 token
+        // Thêm các claims bổ sung vào payload
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getEmail())
                 .issuer("user.com")
@@ -82,15 +82,20 @@ public class AuthenticationService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
-                .jwtID(UUID.randomUUID().toString()) //JWT ID cho login token
-                .claim("scope", buildScope(user))
+                .jwtID(UUID.randomUUID().toString()) // JWT ID cho login token
+                .claim("scope", buildScope(user))  // Giữ nguyên scope
+                .claim("userId", user.getUserId().toString())  // Thêm userId
+                .claim("userCode", user.getUserCode())     // Thêm userCode
+                .claim("warehouseCode", user.getWarehouse().getWarehouseCode()) // Thêm warehouseCode
+                .claim("role", user.getRole().getRoleType())                    // Thêm role
+                .claim("username", user.getUserName())     // Thêm username
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
 
         JWSObject jwsObject = new JWSObject(header, payload);
 
-        //Ki 1 token
+        // Ký token
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
