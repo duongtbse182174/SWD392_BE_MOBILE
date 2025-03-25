@@ -16,22 +16,37 @@ import java.util.Optional;
 public interface NoteItemRepository extends JpaRepository<NoteItem, String> {
 
     @Query("SELECT COALESCE(SUM(n.quantity), 0) FROM NoteItem n WHERE n.product.productCode = :productCode AND " +
-            "n.exchangeNote.transactionType = 'IMPORT' AND n.exchangeNote.destinationWarehouse.warehouseCode = :warehouseCode")
+            "n.exchangeNote.transactionType = 'IMPORT' AND n.exchangeNote.destinationWarehouse.warehouseCode = :warehouseCode " +
+            "AND n.status = 'COMPLETED'")
     Integer getTotalImportByProductCodeAndWarehouse(@Param("productCode") String productCode,
                                                     @Param("warehouseCode") String warehouseCode);
-    
+
     @Query("SELECT COALESCE(SUM(n.quantity), 0) FROM NoteItem n WHERE n.product.productCode = :productCode AND " +
-            "n.exchangeNote.transactionType = 'EXPORT' AND n.exchangeNote.sourceWarehouse.warehouseCode = :warehouseCode")
+            "n.exchangeNote.transactionType = 'EXPORT' AND n.exchangeNote.sourceWarehouse.warehouseCode = :warehouseCode " +
+            "AND n.status = 'COMPLETED'")
     Integer getTotalExportByProductCodeAndWarehouse(@Param("productCode") String productCode,
                                                     @Param("warehouseCode") String warehouseCode);
 
     List<NoteItem> findByExchangeNote_ExchangeNoteId(String exchangeNoteId);
 
-    Optional<NoteItem> findByExchangeNoteAndProduct(ExchangeNote exchangeNote, Product product);
+    Optional<NoteItem> findByExchangeNoteAndProduct(ExchangeNote exchangeNote , Product product);
 
     List<NoteItem> findByExchangeNoteAndStatus(ExchangeNote exchangeNote, NoteItemStatus status);
 
     // (Tuỳ chọn) Thêm nếu bạn muốn lọc theo trạng thái
     List<NoteItem> findByExchangeNote_ExchangeNoteIdAndStatus(String exchangeNoteId, NoteItemStatus status);
+
+    @Query("SELECT COALESCE(SUM(CASE " +
+            "WHEN n.exchangeNote.transactionType = 'IMPORT' THEN n.quantity " +
+            "WHEN n.exchangeNote.transactionType = 'EXPORT' THEN -n.quantity " +
+            "ELSE 0 END), 0) " +
+            "FROM NoteItem n " +
+            "WHERE n.product.productCode = :productCode " +
+            "AND (n.exchangeNote.destinationWarehouse.warehouseCode = :warehouseCode " +
+            "OR n.exchangeNote.sourceWarehouse.warehouseCode = :warehouseCode) " +
+            "AND n.exchangeNote.status = 'finished'")
+    Integer getTotalStockByProductAndWarehouse(@Param("productCode") String productCode,
+                                               @Param("warehouseCode") String warehouseCode);
+
 }
 

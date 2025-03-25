@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import swd392.app.dto.request.StockExchangeRequest;
 import swd392.app.dto.request.TransactionItemRequest;
@@ -66,6 +67,10 @@ public class StockTransactionService {
         User checker = userRepository.findByUserName(authentication.getName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
 
+        // Kiểm tra các mục trước khi tạo phiếu (dựa trên stock check)
+        validateItems(request.getItems(), sourceWarehouse, destinationWarehouse, request.getTransactionType());
+
+        // Tạo ExchangeNote sau khi kiểm tra thành công
         ExchangeNote transaction = new ExchangeNote();
         transaction.setExchangeNoteId(UUID.randomUUID().toString());
         transaction.setDate(LocalDate.now());
@@ -77,6 +82,7 @@ public class StockTransactionService {
 
         ExchangeNote savedTransaction = stockTransactionRepository.save(transaction);
 
+        // Tạo hoặc cập nhật NoteItems
         List<NoteItem> noteItems = createOrUpdateNoteItems(
                 request.getItems(), savedTransaction, sourceWarehouse, destinationWarehouse, request.getTransactionType()
         );
@@ -138,7 +144,14 @@ public class StockTransactionService {
             throw new AppException(ErrorCode.TRANSACTION_CANNOT_BE_MODIFIED);
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        User approveBy = userRepository.findByUserName(authentication.getName())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
         exchangeNote.setStatus(StockExchangeStatus.accepted);
+        exchangeNote.setApprovedBy(approveBy);
         stockTransactionRepository.save(exchangeNote);
 
         log.info("Giao dịch {} đã được phê duyệt thành công.", exchangeNoteId);
@@ -195,6 +208,44 @@ public class StockTransactionService {
         return stockTransactionMapper.toResponse(exchangeNote);
     }
 
+    private void validateItems(List<TransactionItemRequest> itemRequests, Warehouse sourceWarehouse,
+                               Warehouse destinationWarehouse, StockTransactionType transactionType) {
+        log.info("Kiểm tra các mục trước khi tạo giao dịch");
+
+        for (TransactionItemRequest itemRequest : itemRequests) {
+            var product = productRepository.findByProductCode(itemRequest.getProductCode())
+                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+            int requestedQuantity = itemRequest.getQuantity();
+            log.info("Kiểm tra sản phẩm: {}, Số lượng yêu cầu: {}", product.getProductCode(), requestedQuantity);
+
+            Warehouse warehouse = (transactionType == StockTransactionType.IMPORT)
+                    ? destinationWarehouse
+                    : sourceWarehouse;
+
+            if (transactionType == StockTransactionType.EXPORT) {
+                String warehouseCode = warehouse.getWarehouseCode();
+                String productCode = product.getProductCode();
+
+                // Lấy tổng nhập và tổng xuất (tương tự createStockCheckProduct)
+                Integer totalImport = Optional.ofNullable(noteItemRepository.getTotalImportByProductCodeAndWarehouse(
+                        productCode, warehouseCode)).orElse(0);
+                Integer totalExport = Optional.ofNullable(noteItemRepository.getTotalExportByProductCodeAndWarehouse(
+                        productCode, warehouseCode)).orElse(0);
+
+                // Tính tồn kho lý thuyết
+                int theoreticalStock = totalImport - totalExport;
+                log.info("Tổng nhập: {}, Tổng xuất: {}, Tồn kho lý thuyết của {}: {}",
+                        totalImport, totalExport, productCode, theoreticalStock);
+
+                // Kiểm tra tồn kho
+                if (theoreticalStock < requestedQuantity) {
+                    throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+                }
+            }
+        }
+    }
+
     private List<NoteItem> createOrUpdateNoteItems(
             List<TransactionItemRequest> itemRequests,
             ExchangeNote exchangeNote,
@@ -210,31 +261,27 @@ public class StockTransactionService {
                     .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
             int quantity = itemRequest.getQuantity();
-            Warehouse warehouse = (transactionType == StockTransactionType.IMPORT)
-                    ? destinationWarehouse
-                    : sourceWarehouse;
+            log.info("Xử lý sản phẩm: {}, Số lượng: {}", product.getProductCode(), quantity);
+
+            log.info("exchangeNote ID: {}", exchangeNote.getExchangeNoteId());
+            log.info("product Code: {}", product.getProductCode());
 
             Optional<NoteItem> optionalNoteItem = noteItemRepository.findByExchangeNoteAndProduct(
                     exchangeNote, product);
+            log.info("optional note item: {}", optionalNoteItem);
 
             if (optionalNoteItem.isPresent()) {
                 NoteItem existingNoteItem = optionalNoteItem.get();
-
+                log.info("Sản phẩm đã tồn tại trong ExchangeNote, cập nhật số lượng");
                 if (transactionType == StockTransactionType.EXPORT) {
-                    // Kiểm tra nếu số lượng bị giảm xuống dưới 0
-                    if (existingNoteItem.getQuantity() < quantity) {
-                        throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
-                    }
                     existingNoteItem.setQuantity(existingNoteItem.getQuantity() - quantity);
                 } else {
                     existingNoteItem.setQuantity(existingNoteItem.getQuantity() + quantity);
                 }
+                noteItemRepository.save(existingNoteItem);
+                noteItems.add(existingNoteItem);
             } else {
-                if (transactionType == StockTransactionType.EXPORT) {
-                    // Không thể xuất nếu không có hàng
-                    throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
-                }
-
+                log.info("Sản phẩm chưa có trong ExchangeNote, tạo mới");
                 NoteItem newNoteItem = new NoteItem();
                 newNoteItem.setNoteItemId(UUID.randomUUID().toString());
                 newNoteItem.setNoteItemCode(UUID.randomUUID().toString().substring(0, 6));

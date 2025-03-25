@@ -61,7 +61,7 @@ public class ApplicationInitConfig {
                 Role adminRole = roleRepository.findByRoleType("ADMIN")
                         .orElseThrow(() ->  new RuntimeException("Role ADMIN not found!"));
 
-                Warehouse warehouse = warehouseRepository.findByWarehouseCode("W1")
+                Warehouse warehouse = warehouseRepository.findByWarehouseCode("WH0001")
                         .orElseThrow(() -> new RuntimeException("warehouse W1 not found"));
 
                 User user = User.builder()
