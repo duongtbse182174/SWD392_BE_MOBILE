@@ -1,5 +1,6 @@
 package swd392.app.configuration;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
+import org.springframework.util.StringUtils; // Thêm import này
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -50,7 +51,6 @@ public class SecurityConfig {
                         .jwtAuthenticationConverter(jwtAuthenticationConverter()))
         );
 
-//                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
@@ -100,6 +100,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder(10);
     }
 
+    private String getTokenFromHeader(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        String token = null;
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
+            token = header.substring(7);
+        }
+        return token;
+    }
+
     private static final String[] AUTH_WHITELIST = {
             "**",
             "/api/v1/auth/**",
@@ -109,4 +118,3 @@ public class SecurityConfig {
             "/swagger-ui.html"
     };
 }
-
