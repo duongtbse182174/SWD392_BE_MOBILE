@@ -66,11 +66,20 @@ public class StockCheckController {
                 .build();
     }
 
-    // Xem chi tiết phiếu kiểm kho
-    @GetMapping("/{id}")
-    public ApiResponse<StockCheckNoteResponse> getStockCheckNoteById(@PathVariable String id) {
-        return ApiResponse.<StockCheckNoteResponse>builder()
-                .result(stockCheckService.getStockCheckNoteDetails(id))
+    @GetMapping("/filter")
+    public ApiResponse<List<StockCheckNoteResponse>> getStockCheckNotesByStatus(
+            @RequestParam(required = false) String status) {
+        List<StockCheckNoteResponse> result;
+
+        // Nếu không có status được cung cấp, trả về tất cả phiếu kiểm kho
+        if (status == null || status.trim().isEmpty()) {
+            result = stockCheckService.getAllStockCheckNotes();
+        } else {
+            result = stockCheckService.getStockCheckNotesByStatus(status);
+        }
+
+        return ApiResponse.<List<StockCheckNoteResponse>>builder()
+                .result(result)
                 .build();
     }
 }
