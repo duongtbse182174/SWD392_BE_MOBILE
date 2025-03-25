@@ -284,12 +284,19 @@ public class StockCheckService {
     }
 
     /**
-     * Xem chi tiết phiếu kiểm kho.
+     * Lấy danh sách phiếu kiểm kho với bộ lọc trạng thái
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    public StockCheckNoteResponse getStockCheckNoteDetails(String stockCheckNoteId) {
-        StockCheckNote stockCheckNote = getStockCheckNoteById(stockCheckNoteId);
-        return stockCheckMapper.toStockCheckNoteResponse(stockCheckNote);
-    }
+    public List<StockCheckNoteResponse> getStockCheckNotesByStatus(String status) {
+        StockCheckStatus checkStatus;
+        try {
+            checkStatus = StockCheckStatus.valueOf(status.toLowerCase());
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_STATUS);
+        }
 
+        List<StockCheckNote> stockCheckNotes = stockCheckNoteRepository.findByStockCheckStatus(checkStatus);
+        return stockCheckNotes.stream()
+                .map(stockCheckMapper::toStockCheckNoteResponse)
+                .collect(Collectors.toList());
+    }
 }
