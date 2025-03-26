@@ -15,6 +15,7 @@ import swd392.app.dto.response.StockExchangeResponse;
 import swd392.app.dto.response.NoteItemResponse;
 import swd392.app.entity.*;
 import swd392.app.enums.NoteItemStatus;
+import swd392.app.enums.ProductStatus;
 import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.StockTransactionType;
 import swd392.app.exception.AppException;
@@ -206,6 +207,10 @@ public class StockTransactionService {
             // Giảm số lượng trong kho
             product.setQuantity(product.getQuantity() - noteItem.getQuantity());
             productRepository.save(product);
+            if(product.getQuantity() == 0)
+            {
+                product.setStatus(ProductStatus.outofstock);
+            }
 
             // Cập nhật trạng thái của NoteItem
             noteItem.setStatus(NoteItemStatus.COMPLETED);
