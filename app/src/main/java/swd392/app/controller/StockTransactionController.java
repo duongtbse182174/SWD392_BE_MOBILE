@@ -35,7 +35,6 @@ public class StockTransactionController {
                 .build();
     }
 
-
     @PostMapping("/finalize/{exchangeNoteId}")
     public ApiResponse<StockExchangeResponse> finalizeTransaction(
             @PathVariable String exchangeNoteId,

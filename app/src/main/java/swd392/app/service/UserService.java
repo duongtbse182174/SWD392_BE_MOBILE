@@ -31,7 +31,7 @@ public class UserService {
     RoleRepository roleRepository;
     WarehouseRepository warehouseRepository;
 
-//    @PreAuthorize("hasRole('ADMIN')")
+    //    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse createUser(UserCreationRequest request) {
 
         if (userRepository.existsByUserCode(request.getUserCode()))
@@ -59,9 +59,9 @@ public class UserService {
 
     public UserResponse getMyInfo(){
         var context = SecurityContextHolder.getContext();
-        String email = context.getAuthentication().getName();
+        String username = context.getAuthentication().getName();
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByUserName(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
 
         return userMapper.toUserResponse(user);

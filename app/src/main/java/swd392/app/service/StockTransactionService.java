@@ -13,10 +13,7 @@ import swd392.app.dto.request.StockExchangeRequest;
 import swd392.app.dto.request.TransactionItemRequest;
 import swd392.app.dto.response.StockExchangeResponse;
 import swd392.app.dto.response.NoteItemResponse;
-import swd392.app.entity.ExchangeNote;
-import swd392.app.entity.NoteItem;
-import swd392.app.entity.User;
-import swd392.app.entity.Warehouse;
+import swd392.app.entity.*;
 import swd392.app.enums.NoteItemStatus;
 import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.StockTransactionType;
@@ -44,7 +41,7 @@ public class StockTransactionService {
     StockTransactionMapper stockTransactionMapper;
     NoteItemMapper noteItemMapper;
 
-//    @PreAuthorize("hasRole('STAFF')")
+    //    @PreAuthorize("hasRole('STAFF')")
     public StockExchangeResponse createTransaction(StockExchangeRequest request) {
         log.info("Bắt đầu tạo giao dịch: {}", request);
 
@@ -117,6 +114,7 @@ public class StockTransactionService {
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
     public List<StockExchangeResponse> getPendingTransactions() {
         return stockTransactionRepository.findByStatus(StockExchangeStatus.pending).stream()
                 .map(stockTransactionMapper::toResponse)
@@ -197,10 +195,24 @@ public class StockTransactionService {
         List<NoteItem> noteItems = noteItemRepository.findByExchangeNote_ExchangeNoteId(exchangeNoteId);
 
         for (NoteItem noteItem : noteItems) {
+            Product product = productRepository.findById(noteItem.getProduct().getProductId())
+                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+            // Kiểm tra số lượng tồn kho
+            if (product.getQuantity() < noteItem.getQuantity()) {
+                throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
+            }
+
+            // Giảm số lượng trong kho
+            product.setQuantity(product.getQuantity() - noteItem.getQuantity());
+            productRepository.save(product);
+
+            // Cập nhật trạng thái của NoteItem
             noteItem.setStatus(NoteItemStatus.COMPLETED);
         }
         noteItemRepository.saveAll(noteItems);
 
+        // Cập nhật trạng thái giao dịch
         exchangeNote.setStatus(StockExchangeStatus.finished);
         stockTransactionRepository.save(exchangeNote);
 

@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.text.ParseException;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -86,6 +87,7 @@ public class AuthenticationService {
         // Tạo payload với thứ tự claim chính xác
         StringBuilder jsonBuilder = new StringBuilder();
         jsonBuilder.append("{");
+        jsonBuilder.append("\"jti\":\"").append(UUID.randomUUID().toString()).append("\",");
         jsonBuilder.append("\"userId\":\"").append(user.getUserId().toString()).append("\",");
         jsonBuilder.append("\"userCode\":\"").append(user.getUserCode()).append("\",");
         jsonBuilder.append("\"role\":\"").append(user.getRole().getRoleType()).append("\",");

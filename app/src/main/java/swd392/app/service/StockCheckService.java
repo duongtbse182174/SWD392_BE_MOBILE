@@ -84,7 +84,7 @@ public class StockCheckService {
         }
 
         String userName = authentication.getName();
-        return userRepository.findByEmail(userName)
+        return userRepository.findByUserName(userName)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
     }
 
