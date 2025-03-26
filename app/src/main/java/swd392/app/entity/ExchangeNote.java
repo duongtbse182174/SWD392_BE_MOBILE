@@ -7,6 +7,7 @@ import swd392.app.enums.StockExchangeStatus;
 import swd392.app.enums.StockTransactionType;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -23,7 +24,7 @@ public class ExchangeNote {
     String exchangeNoteId;
 
     @Column(nullable = false)
-    LocalDate date;
+    LocalDateTime date;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "ENUM('pending', 'accepted', 'finished', 'rejected') DEFAULT 'pending'")

@@ -9,6 +9,8 @@ import swd392.app.entity.NoteItem;
 import swd392.app.entity.Product;
 import swd392.app.enums.NoteItemStatus;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +28,24 @@ public interface NoteItemRepository extends JpaRepository<NoteItem, String> {
             "AND n.status = 'COMPLETED'")
     Integer getTotalExportByProductCodeAndWarehouse(@Param("productCode") String productCode,
                                                     @Param("warehouseCode") String warehouseCode);
+
+    @Query("SELECT COALESCE(SUM(n.quantity), 0) FROM NoteItem n WHERE n.product.productCode = :productCode " +
+            "AND n.exchangeNote.transactionType = 'IMPORT' " +
+            "AND n.exchangeNote.destinationWarehouse.warehouseCode = :warehouseCode " +
+            "AND n.status = 'COMPLETED' " +
+            "AND n.exchangeNote.date > :lastStockCheckDate")
+    Integer getTotalImportAfterLastCheck(@Param("productCode") String productCode,
+                                         @Param("warehouseCode") String warehouseCode,
+                                         @Param("lastStockCheckDate") LocalDateTime lastStockCheckDate);
+
+    @Query("SELECT COALESCE(SUM(n.quantity), 0) FROM NoteItem n WHERE n.product.productCode = :productCode " +
+            "AND n.exchangeNote.transactionType = 'EXPORT' " +
+            "AND n.exchangeNote.sourceWarehouse.warehouseCode = :warehouseCode " +
+            "AND n.status = 'COMPLETED' " +
+            "AND n.exchangeNote.date > :lastStockCheckDate")
+    Integer getTotalExportAfterLastCheck(@Param("productCode") String productCode,
+                                         @Param("warehouseCode") String warehouseCode,
+                                         @Param("lastStockCheckDate") LocalDateTime lastStockCheckDate);
 
     List<NoteItem> findByExchangeNote_ExchangeNoteId(String exchangeNoteId);
 

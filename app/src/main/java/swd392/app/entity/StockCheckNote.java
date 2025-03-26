@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import swd392.app.enums.StockCheckStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -21,8 +22,8 @@ public class StockCheckNote {
     @Column(name = "stockCheckNote_id")
     String stockCheckNoteId;
 
-    @Column(name = "date", nullable = false)
-    LocalDate date;
+    @Column(name = "date_time", nullable = false)
+    LocalDateTime dateTime;
 
     @ManyToOne
     @JoinColumn(name = "warehouse_code", referencedColumnName = "warehouse_code", nullable = false)

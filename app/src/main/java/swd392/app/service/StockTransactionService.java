@@ -25,6 +25,7 @@ import swd392.app.mapper.NoteItemMapper;
 import swd392.app.repository.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public class StockTransactionService {
         // Tạo ExchangeNote sau khi kiểm tra thành công
         ExchangeNote transaction = new ExchangeNote();
         transaction.setExchangeNoteId(UUID.randomUUID().toString());
-        transaction.setDate(LocalDate.now());
+        transaction.setDate(LocalDateTime.now());
         transaction.setTransactionType(request.getTransactionType());
         transaction.setSourceWarehouse(sourceWarehouse);
         transaction.setDestinationWarehouse(destinationWarehouse);
@@ -204,12 +205,13 @@ public class StockTransactionService {
                 throw new AppException(ErrorCode.INSUFFICIENT_STOCK);
             }
 
-            // Giảm số lượng trong kho
-            product.setQuantity(product.getQuantity() - noteItem.getQuantity());
-            productRepository.save(product);
-            if(product.getQuantity() == 0)
-            {
-                product.setStatus(ProductStatus.outofstock);
+            if (exchangeNote.getTransactionType() == StockTransactionType.IMPORT) {
+                // Giảm số lượng trong kho
+                product.setQuantity(product.getQuantity() - noteItem.getQuantity());
+                productRepository.save(product);
+                if (product.getQuantity() == 0) {
+                    product.setStatus(ProductStatus.outofstock);
+                }
             }
 
             // Cập nhật trạng thái của NoteItem

@@ -21,6 +21,8 @@ import swd392.app.mapper.StockCheckMapper;
 import swd392.app.repository.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -114,7 +116,7 @@ public class StockCheckService {
     private StockCheckNote createNewStockCheckNote(User checker, Warehouse warehouse, String description) {
         StockCheckNote stockCheckNote = new StockCheckNote();
         stockCheckNote.setStockCheckNoteId(UUID.randomUUID().toString());
-        stockCheckNote.setDate(LocalDate.now());
+        stockCheckNote.setDateTime(LocalDateTime.now());
         stockCheckNote.setWarehouse(warehouse);
         stockCheckNote.setChecker(checker);
         stockCheckNote.setDescription(description);
@@ -133,15 +135,20 @@ public class StockCheckService {
         String warehouseCode = warehouse.getWarehouseCode();
         String productCode = product.getProductCode();
 
-        // Lấy thông tin số lượng nhập, xuất
-        Integer totalImport = Optional.ofNullable(noteItemRepository.getTotalImportByProductCodeAndWarehouse(
-                productCode, warehouseCode)).orElse(0);
-        Integer totalExport = Optional.ofNullable(noteItemRepository.getTotalExportByProductCodeAndWarehouse(
-                productCode, warehouseCode)).orElse(0);
-
         // Lấy thông tin kiểm kho gần nhất
         Optional<StockCheckProduct> lastStockCheck = stockCheckProductRepository
                 .findLatestStockCheck(productCode, warehouseCode);
+
+        LocalDateTime lastStockCheckDateTime = lastStockCheck
+                .map(stockCheck -> stockCheck.getStockCheckNote().getDateTime().truncatedTo(ChronoUnit.SECONDS))
+                .orElse(LocalDateTime.of(1900, 1, 1, 0, 0));
+
+        // Lấy thông tin số lượng nhập, xuất sau lần kiểm kho gần nhất
+        Integer totalImport = Optional.ofNullable(noteItemRepository.getTotalImportAfterLastCheck(
+                productCode, warehouseCode, lastStockCheckDateTime)).orElse(0);
+
+        Integer totalExport = Optional.ofNullable(noteItemRepository.getTotalExportAfterLastCheck(
+                productCode, warehouseCode, lastStockCheckDateTime)).orElse(0);
 
         // Tạo đối tượng sản phẩm kiểm kho
         StockCheckProduct stockCheckProduct = new StockCheckProduct();

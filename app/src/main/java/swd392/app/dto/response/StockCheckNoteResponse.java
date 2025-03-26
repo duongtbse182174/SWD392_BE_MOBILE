@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StockCheckNoteResponse { //DTO cho phản hồi phiếu kiểm kho
     String stockCheckNoteId;
-    LocalDate date;
+    LocalDateTime dateTime;
     String warehouseCode;
     String warehouseName;
     String checkerName;

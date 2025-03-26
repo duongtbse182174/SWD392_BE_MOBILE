@@ -15,7 +15,7 @@ public interface StockCheckMapper {
     // Chuyển đổi StockCheckNote entity thành StockCheckNoteResponse
     @Mappings({
             @Mapping(source = "stockCheckNoteId", target = "stockCheckNoteId"),
-            @Mapping(source = "date", target = "date"),
+            @Mapping(source = "dateTime", target = "dateTime"),
             @Mapping(source = "warehouse.warehouseCode", target = "warehouseCode"),
             @Mapping(source = "warehouse.warehouseName", target = "warehouseName"),
             @Mapping(source = "checker.fullName", target = "checkerName"),
